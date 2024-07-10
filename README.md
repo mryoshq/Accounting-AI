@@ -89,7 +89,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-- [Full Stack FastAPI PostgreSQL](https://github.com/tiangolo/full-stack-fastapi-postgresql) by tiangolo
+- [React - fastApi template](https://github.com/tiangolo/full-stack-fastapi-postgresql)
 
 ## Contributing
 
