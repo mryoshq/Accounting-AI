@@ -1,0 +1,131 @@
+#import os
+#from dotenv import load_dotenv
+#from google.cloud import storage
+from openai import OpenAI
+import timeit
+import json
+
+"""def load_env():
+    load_dotenv()
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable not found")
+    return api_key"""
+
+
+def call_openai_to_extract_data(api_key: str, invoice_url: str):
+    from openai import OpenAI
+    import instructor
+    from pydantic import BaseModel, Field
+    from datetime import date
+    from typing import List, Optional, Literal
+    class ItemDetail(BaseModel):
+        code: Optional[str] = Field("", description="Code of the item, designation or reference number")
+        description: Optional[str] = Field("", description="Description of the item")
+        unit_price: Optional[float] = Field(0, description="Unit price of the item")
+        quantity: Optional[int] = Field(1, description="Quantity of the item")
+        #total_price: Optional[float] = Field(None, description="Total price of the item, calculated by multiplying unit price by quantity")
+        #brand: Optional[str] = Field(None, description="Brand of the item")
+        #name: Optional[str] = Field(None, description="Name of the item")
+    class Invoice(BaseModel):
+        invoice_number: Optional[str] = Field("", description="Invoice number")
+        invoice_date: Optional[date] = Field("", description="Invoice date in yyyy-MM-dd format")
+        due_date: Optional[date] = Field("", description="Due date in yyyy-MM-dd format")
+        items: List[ItemDetail] = Field(default_factory=list, description="List of items with details including price and quantity")
+        total_amount_ht: Optional[float] = Field(None, description="Total amount excluding VAT")
+        total_vat_amount: Optional[float] = Field(None, description="Total VAT amount")
+        total_amount_ttc: Optional[float] = Field(None, description="Total amount including VAT")
+        currency: Literal["EUR", "MAD"] = Field(None, description="Currency of the invoice")
+        #supplier_name: Optional[str] = Field(None, description="Supplier name")
+        #shipping_cost: Optional[float] = Field(None, description="Shipping cost on the invoice")
+        #additional_charges: Optional[float] = Field(None, description="Additional charges on the invoice")
+        #payment_method: Optional[str] = Field(None, description="Payment method used for the invoice")
+        #vat_percentage: Optional[float] = Field(None, description="VAT percentage applied on the invoice")
+
+    client = instructor.from_openai(OpenAI(api_key=api_key))
+    print("client : ",client)
+    response = client.chat.completions.create(
+        model='gpt-4-turbo',
+        messages=[
+            {
+                "role": "system",
+                "content": """You are a specialized invoice processing AI. You have been trained to extract information from invoices. You will extract information from the given invoice and output the information in json format. Make sure that each information goes to the specific field in the json output. """
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Analyze the given invoice and extract relevant data in the correct format"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": invoice_url,
+                            "detail": "high"
+                        }
+                    }
+                ]
+            },
+        ],
+        response_model=Invoice,
+        max_tokens=2000,
+    )
+    return response
+
+def process_invoice(invoice_url: str, debug: bool = False):
+    #api_key = load_env()
+    api_key = "sk-proj-BRqbETJd09hgxM14YVC8T3BlbkFJkRH4etr1EzUBnkOV40Q7"
+    if debug:
+        print("\nLoaded API key:", api_key, "...\n")
+    start = timeit.default_timer()
+    if debug:
+        print("Starting timer...")
+        print("Waiting for the Assistant to process...")
+
+    if invoice_url is not None:
+        extracted_data = call_openai_to_extract_data(api_key, invoice_url)
+    else:
+        raise ValueError("Invoice URL not provided")
+
+    response_data_json = extracted_data.json() 
+    end = timeit.default_timer()
+    if debug:
+        beautified_json = json.loads(response_data_json)
+        print(f"\nJSON response:\n")
+        print(json.dumps(beautified_json, indent=2))
+        print(f"\nProcessing time: {end - start} seconds")
+    return json.loads(response_data_json)
+
+
+def pipeline(files, debug: bool = False):
+    # urls = handle_file_upload(files, debug)
+    urls = ["https://raw.githubusercontent.com/mryoshq/assets/main/cci.jpg"]
+    urls2 = ["https://raw.githubusercontent.com/mryoshq/assets/main/gat.jpg", "https://raw.githubusercontent.com/mryoshq/assets/main/ides.jpg"]
+    
+    results = []
+    for url in urls2:
+        #results = []
+        result = process_invoice(url, debug)
+        results.append(result)
+    return results
+
+
+
+if __name__ == "__main__":
+    files = []
+    pipeline(files, debug=False)
+
+
+
+
+"""
+ def _encode_file(self, file):
+        if utils.extract_extension(file.name) == "pdf":
+            base64_encoded = utils.pdf2jpeg(file)
+        else:
+            base64_encoded = utils.image2jpeg(file)
+
+        return base64_encoded
+
+"""
