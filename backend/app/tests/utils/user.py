@@ -2,9 +2,9 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.crud.user import (
-    create_user,
+    create_user_db,
     get_user_by_email,
-    update_user,
+    update_user_db,
 )
 from app.core.config import settings
 from app.models import User, UserCreate, UserUpdate
@@ -27,7 +27,7 @@ def create_random_user(db: Session) -> User:
     email = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=email, password=password)
-    user = create_user(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_create=user_in)
     return user
 
 
@@ -43,11 +43,11 @@ def authentication_token_from_email(
     user = get_user_by_email(session=db, email=email)
     if not user:
         user_in_create = UserCreate(email=email, password=password)
-        user = create_user(session=db, user_create=user_in_create)
+        user = create_user_db(session=db, user_create=user_in_create)
     else:
         user_in_update = UserUpdate(password=password)
         if not user.id:
             raise Exception("User id not set")
-        user = update_user(session=db, db_user=user, user_in=user_in_update)
+        user = update_user_db(session=db, db_user=user, user_in=user_in_update)
 
     return user_authentication_headers(client=client, email=email, password=password)

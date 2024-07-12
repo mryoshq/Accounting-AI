@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import col, delete, func, select
 
 from app.crud.user import ( 
-    create_user,
+    create_user_db,
     get_user_by_email,
-    update_user,
+    update_user_db,
 )
 from app.api.deps import (
     CurrentUser,
@@ -30,6 +30,7 @@ from app.models import (
 from app.utils import generate_new_account_email, send_email
 
 router = APIRouter()
+
 
 
 @router.get(
@@ -65,7 +66,7 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
             detail="The user with this email already exists in the system.",
         )
 
-    user = create_user(session=session, user_create=user_in)
+    user = create_user_db(session=session, user_in=user_in)
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password
@@ -76,6 +77,7 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
             html_content=email_data.html_content,
         )
     return user
+
 
 
 @router.patch("/me", response_model=UserPublic)
@@ -161,8 +163,9 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
             detail="The user with this email already exists in the system",
         )
     user_create = UserCreate.model_validate(user_in)
-    user = create_user(session=session, user_create=user_create)
+    user = create_user_db(session=session, user_in=user_create)
     return user
+
 
 
 @router.get("/{user_id}", response_model=UserPublic)
@@ -211,7 +214,7 @@ def update_user(
                 status_code=409, detail="User with this email already exists"
             )
 
-    db_user = update_user(session=session, db_user=db_user, user_in=user_in)
+    db_user = update_user_db(session=session, db_user=db_user, user_in=user_in)
     return db_user
 
 

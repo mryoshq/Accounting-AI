@@ -6,9 +6,9 @@ from app.core.security import get_password_hash, verify_password
 from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
 
 
-def create_user(*, session: Session, user_create: UserCreate) -> User:
+def create_user_db(*, session: Session, user_in: UserCreate) -> User:
     db_obj = User.model_validate(
-        user_create, update={"hashed_password": get_password_hash(user_create.password)}
+        user_in, update={"hashed_password": get_password_hash(user_in.password)}
     )
     session.add(db_obj)
     session.commit()
@@ -16,7 +16,7 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     return db_obj
 
 
-def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
+def update_user_db(*, session: Session, db_user: User, user_in: UserUpdate) -> User:
     user_data = user_in.model_dump(exclude_unset=True)
     extra_data = {}
     if "password" in user_data:
