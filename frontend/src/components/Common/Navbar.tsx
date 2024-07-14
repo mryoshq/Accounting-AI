@@ -9,7 +9,6 @@ import { FaPlus, FaUpload } from "react-icons/fa";
 import { useQueryClient } from "@tanstack/react-query";
 
 import AddUser from "../Admin/AddUser";
-import AddItem from "../Items/AddItem";
 import AddProject from "../Projects/AddProject";
 import AddSupplier from "../Suppliers/AddSupplier";
 import AddSupplierContact from "../Suppliercontacts/AddSupplierContact";
@@ -37,7 +36,6 @@ const customLabels: { [key: string]: string } = {
 
 const Navbar: React.FC<NavbarProps> = ({ type }) => {
   const addUserModal = useDisclosure();
-  const addItemModal = useDisclosure();
   const addProjectModal = useDisclosure();
   const addSupplierModal = useDisclosure();
   const addSupplierContactModal = useDisclosure();
@@ -56,8 +54,6 @@ const Navbar: React.FC<NavbarProps> = ({ type }) => {
   const handleOpenModal = () => {
     if (type === "User") {
       addUserModal.onOpen();
-    } else if (type === "Item") {
-      addItemModal.onOpen();
     } else if (type === "Project") {
       addProjectModal.onOpen();
     } else if (type === "Supplier") {
@@ -117,7 +113,6 @@ const Navbar: React.FC<NavbarProps> = ({ type }) => {
           <Icon as={FaPlus} /> Add {buttonLabel}
         </Button>
         <AddUser isOpen={addUserModal.isOpen} onClose={addUserModal.onClose} />
-        <AddItem isOpen={addItemModal.isOpen} onClose={addItemModal.onClose} />
         <AddProject 
           isOpen={addProjectModal.isOpen} 
           onClose={addProjectModal.onClose} 

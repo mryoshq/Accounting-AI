@@ -6,8 +6,6 @@ from sqlmodel import Session, select
 from app.crud.user import (
     create_user_db,
     get_user_by_email_db
-
-
 )
 from app.core.config import settings
 from app.core.security import verify_password

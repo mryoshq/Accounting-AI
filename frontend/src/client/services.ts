@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -396,146 +396,6 @@ emailTo,
 
 }
 
-export type TDataReadItems = {
-                limit?: number
-skip?: number
-                
-            }
-export type TDataCreateItem = {
-                requestBody: ItemCreate
-                
-            }
-export type TDataReadItem = {
-                id: number
-                
-            }
-export type TDataUpdateItem = {
-                id: number
-requestBody: ItemUpdate
-                
-            }
-export type TDataDeleteItem = {
-                id: number
-                
-            }
-
-export class ItemsService {
-
-	/**
-	 * Read Items
-	 * Retrieve items.
-	 * @returns ItemsPublic Successful Response
-	 * @throws ApiError
-	 */
-	public static readItems(data: TDataReadItems = {}): CancelablePromise<ItemsPublic> {
-		const {
-limit = 100,
-skip = 0,
-} = data;
-		return __request(OpenAPI, {
-			method: 'GET',
-			url: '/api/v1/items/',
-			query: {
-				skip, limit
-			},
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-	/**
-	 * Create Item
-	 * Create new item.
-	 * @returns ItemPublic Successful Response
-	 * @throws ApiError
-	 */
-	public static createItem(data: TDataCreateItem): CancelablePromise<ItemPublic> {
-		const {
-requestBody,
-} = data;
-		return __request(OpenAPI, {
-			method: 'POST',
-			url: '/api/v1/items/',
-			body: requestBody,
-			mediaType: 'application/json',
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-	/**
-	 * Read Item
-	 * Get item by ID.
-	 * @returns ItemPublic Successful Response
-	 * @throws ApiError
-	 */
-	public static readItem(data: TDataReadItem): CancelablePromise<ItemPublic> {
-		const {
-id,
-} = data;
-		return __request(OpenAPI, {
-			method: 'GET',
-			url: '/api/v1/items/{id}',
-			path: {
-				id
-			},
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-	/**
-	 * Update Item
-	 * Update an item.
-	 * @returns ItemPublic Successful Response
-	 * @throws ApiError
-	 */
-	public static updateItem(data: TDataUpdateItem): CancelablePromise<ItemPublic> {
-		const {
-id,
-requestBody,
-} = data;
-		return __request(OpenAPI, {
-			method: 'PUT',
-			url: '/api/v1/items/{id}',
-			path: {
-				id
-			},
-			body: requestBody,
-			mediaType: 'application/json',
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-	/**
-	 * Delete Item
-	 * Delete an item.
-	 * @returns Message Successful Response
-	 * @throws ApiError
-	 */
-	public static deleteItem(data: TDataDeleteItem): CancelablePromise<Message> {
-		const {
-id,
-} = data;
-		return __request(OpenAPI, {
-			method: 'DELETE',
-			url: '/api/v1/items/{id}',
-			path: {
-				id
-			},
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-}
-
 export type TDataReadProjects = {
                 limit?: number
 skip?: number
@@ -791,10 +651,7 @@ export type TDataCreateSupplierContact = {
                 requestBody: SupplierContactCreate
                 
             }
-export type TDataReadContact = {
-                contactId: number
-                
-            }
+
 export type TDataUpdateSupplierContact = {
                 contactId: number
 requestBody: SupplierContactUpdate

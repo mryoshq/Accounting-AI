@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.routes import items, login, users, utils
+from app.api.routes import login, users, utils
 from app.api.routes import projects
 from app.api.routes import suppliers, customers
 from app.api.routes import parts
@@ -12,7 +12,6 @@ api_router.include_router(login.router, tags=["login"])
 
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(utils.router, prefix="/utils", tags=["utils"])
-api_router.include_router(items.router, prefix="/items", tags=["items"])
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
 api_router.include_router(customers.router, prefix="/customers", tags=["customers"])
