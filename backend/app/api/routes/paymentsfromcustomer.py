@@ -1,14 +1,13 @@
+# app/api/routes/paymentsfromcustomer.py
+
 from fastapi import APIRouter, HTTPException
-from sqlmodel import select, func
-from typing import Any, List
+from typing import Any
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import PaymentFromCustomer, PaymentFromCustomerCreate, PaymentFromCustomerPublic, PaymentFromCustomersPublic, PaymentFromCustomerUpdate, InternalInvoice
-from app.models import Customer, Project
+from app.models import PaymentFromCustomerCreate, PaymentFromCustomerPublic, PaymentFromCustomersPublic, PaymentFromCustomerUpdate
+from app.crud import payments_from_customers as payments_crud
 
 router = APIRouter()
-
-# --- PaymentFromCustomers Endpoints ---
 
 @router.get("/", response_model=PaymentFromCustomersPublic)
 def read_payments_from_customers(
@@ -17,10 +16,8 @@ def read_payments_from_customers(
     """
     Retrieve payments from customers.
     """
-    count_statement = select(func.count()).select_from(PaymentFromCustomer)
-    count = session.exec(count_statement).one()
-    statement = select(PaymentFromCustomer).offset(skip).limit(limit)
-    payments = session.exec(statement).all()
+    payments = payments_crud.get_payments_from_customers_db(session, skip, limit)
+    count = payments_crud.get_payments_from_customers_count_db(session)
     return PaymentFromCustomersPublic(data=payments, count=count)
 
 @router.get("/{payment_id}", response_model=PaymentFromCustomerPublic)
@@ -30,13 +27,10 @@ def read_payment_from_customer(
     """
     Get payment from customer by ID.
     """
-    payment = session.get(PaymentFromCustomer, payment_id)
+    payment = payments_crud.get_payment_from_customer_db(session, payment_id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment from customer not found")
     return payment
-
-
-
 
 @router.post("/", response_model=PaymentFromCustomerPublic)
 def create_payment_from_customer(
@@ -48,36 +42,10 @@ def create_payment_from_customer(
     """
     Create new payment from customer.
     """
-    # Check if internal invoice exists
-    internal_invoice = session.get(InternalInvoice, payment_in.internal_invoice_id)
-    if not internal_invoice:
-        raise HTTPException(status_code=404, detail="Internal invoice not found")
-
-    # Deduce project_id and customer_id from internal_invoice
-    project_id = internal_invoice.project_id
-    customer_id = internal_invoice.customer_id
-
-    # Check if project exists
-    project = session.get(Project, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    # Check if customer exists
-    customer = session.get(Customer, customer_id)
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-
-    payment_data = payment_in.dict()
-    payment_data["project_id"] = project_id
-    payment_data["customer_id"] = customer_id
-
-    payment = PaymentFromCustomer(**payment_data)
-    session.add(payment)
-    session.commit()
-    session.refresh(payment)
-    return payment
-
-
+    try:
+        return payments_crud.create_payment_from_customer_db(session, payment_in)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.patch("/{payment_id}", response_model=PaymentFromCustomerPublic)
 def patch_payment_from_customer(
@@ -90,42 +58,14 @@ def patch_payment_from_customer(
     """
     Patch an existing payment from customer.
     """
-    payment = session.get(PaymentFromCustomer, payment_id)
+    payment = payments_crud.get_payment_from_customer_db(session, payment_id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment from customer not found")
-
-    if payment_in.internal_invoice_id is not None:
-        # Check if internal invoice exists
-        internal_invoice = session.get(InternalInvoice, payment_in.internal_invoice_id)
-        if not internal_invoice:
-            raise HTTPException(status_code=404, detail="Internal invoice not found")
-
-        # Deduce project_id and customer_id from internal_invoice
-        project_id = internal_invoice.project_id
-        customer_id = internal_invoice.customer_id
-
-        # Check if project exists
-        project = session.get(Project, project_id)
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
-
-        # Check if customer exists
-        customer = session.get(Customer, customer_id)
-        if not customer:
-            raise HTTPException(status_code=404, detail="Customer not found")
-
-        payment.project_id = project_id
-        payment.customer_id = customer_id
-
-    payment_data = payment_in.dict(exclude_unset=True)
-    for key, value in payment_data.items():
-        setattr(payment, key, value)
     
-    session.add(payment)
-    session.commit()
-    session.refresh(payment)
-    return payment
-
+    try:
+        return payments_crud.update_payment_from_customer_db(session, payment, payment_in)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.delete("/{payment_id}", response_model=PaymentFromCustomerPublic)
 def delete_payment_from_customer(
@@ -136,10 +76,8 @@ def delete_payment_from_customer(
     """
     Delete payment from customer.
     """
-    payment = session.get(PaymentFromCustomer, payment_id)
+    payment = payments_crud.get_payment_from_customer_db(session, payment_id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment from customer not found")
 
-    session.delete(payment)
-    session.commit()
-    return payment
+    return payments_crud.delete_payment_from_customer_db(session, payment)

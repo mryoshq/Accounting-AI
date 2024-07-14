@@ -1,29 +1,21 @@
+
 from fastapi import APIRouter, HTTPException
-from sqlmodel import select, func
 from typing import Any
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
-    Project, 
     ProjectCreate, 
     ProjectPublic, 
     ProjectsPublic, 
-    ProjectUpdate
-    )
-
-from app.models import ( 
-    Part, 
+    ProjectUpdate,
     PartsPublic, 
-    PartPublic
-    )
-
-from app.models import PaymentToSuppliersPublic
+    PartPublic,
+    PaymentToSuppliersPublic
+)
+from app.crud import projects as projects_crud
 
 router = APIRouter()
 
-# --- Project Endpoints ---
-#
-# read 
 @router.get("/", response_model=ProjectsPublic)
 def read_projects(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
@@ -31,25 +23,20 @@ def read_projects(
     """
     Retrieve projects.
     """
-    count_statement = select(func.count()).select_from(Project)
-    count = session.exec(count_statement).one()
-    statement = select(Project).offset(skip).limit(limit)
-    projects = session.exec(statement).all()
+    projects = projects_crud.get_projects_db(session, skip=skip, limit=limit)
+    count = projects_crud.get_projects_count_db(session)
     return ProjectsPublic(data=projects, count=count)
-
 
 @router.get("/{project_id}", response_model=ProjectPublic)
 def read_project(session: SessionDep, current_user: CurrentUser, project_id: int) -> Any:
     """
     Get project by ID.
     """
-    project = session.get(Project, project_id)
+    project = projects_crud.get_project_db(session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
-#
-# modify
 @router.post("/", response_model=ProjectPublic)
 def create_project(
     *, session: SessionDep, current_user: CurrentUser, project_in: ProjectCreate
@@ -57,11 +44,7 @@ def create_project(
     """
     Create new project.
     """
-    project = Project.from_orm(project_in)
-    session.add(project)
-    session.commit()
-    session.refresh(project)
-    return project
+    return projects_crud.create_project_db(session, project_in)
 
 @router.patch("/{project_id}", response_model=ProjectPublic)
 def update_project(
@@ -70,23 +53,11 @@ def update_project(
     """
     Update an existing project.
     """
-    project = session.get(Project, project_id)
+    project = projects_crud.get_project_db(session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    project_data = project_in.dict(exclude_unset=True)
-    for key, value in project_data.items():
-        setattr(project, key, value)
-    session.add(project)
-    session.commit()
-    session.refresh(project)
-    return project
+    return projects_crud.update_project_db(session, project, project_in)
 
-
-# --- Project Item Endpoints ---
-
-# --- Project Part Endpoints ---
-
-# Read parts for a specific project
 @router.get("/{project_id}/parts", response_model=PartsPublic)
 def read_project_parts(
     session: SessionDep, current_user: CurrentUser, project_id: int
@@ -94,13 +65,12 @@ def read_project_parts(
     """
     Retrieve parts for a specific project.
     """
-    project = session.get(Project, project_id)
+    project = projects_crud.get_project_db(session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    return PartsPublic(data=project.parts, count=len(project.parts))
+    parts = projects_crud.get_project_parts_db(session, project_id)
+    return PartsPublic(data=parts, count=len(parts))
 
-
-# Read part by project and part ID
 @router.get("/{project_id}/parts/{part_id}", response_model=PartPublic)
 def read_project_part_by_project_and_part_id(
     session: SessionDep,
@@ -111,41 +81,25 @@ def read_project_part_by_project_and_part_id(
     """
     Get part by part ID for a specific project.
     """
-    project = session.get(Project, project_id)
+    project = projects_crud.get_project_db(session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    part = (
-        session.query(Part)
-        .filter(
-            Part.id == part_id,
-            Part.project_id == project_id,
-        )
-        .first()
-    )
-
+    part = projects_crud.get_project_part_db(session, project_id, part_id)
     if not part:
-        raise HTTPException(
-            status_code=404, detail="Part not found for this project"
-        )
+        raise HTTPException(status_code=404, detail="Part not found for this project")
 
     return part
-
 
 @router.delete("/{project_id}", response_model=ProjectPublic)
 def delete_project(session: SessionDep, current_user: CurrentUser, project_id: int) -> Any:
     """
     Delete project.
     """
-    project = session.get(Project, project_id)
+    project = projects_crud.get_project_db(session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    session.delete(project)
-    session.commit()
-    return project
-
-
-# --- project payments endpoints ---
+    return projects_crud.delete_project_db(session, project)
 
 @router.get("/{project_id}/payments", response_model=PaymentToSuppliersPublic)
 def read_payments_for_project(
@@ -156,9 +110,9 @@ def read_payments_for_project(
     """
     Retrieve all payments to suppliers for a specific project.
     """
-    project = session.get(Project, project_id)
+    project = projects_crud.get_project_db(session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    payments = project.payments_to_suppliers
+    payments = projects_crud.get_project_payments_db(session, project_id)
     return PaymentToSuppliersPublic(data=payments, count=len(payments))
