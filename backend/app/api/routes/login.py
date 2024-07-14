@@ -6,8 +6,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.crud.user import (
-    authenticate, 
-    get_user_by_email, )
+    authenticate_user, 
+    get_user_by_email_db, )
 
 from app.api.deps import (
     CurrentUser, 
@@ -34,7 +34,7 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = authenticate(
+    user = authenticate_user(
         session=session, email=form_data.username, password=form_data.password
     )
     if not user:
@@ -62,7 +62,7 @@ def recover_password(email: str, session: SessionDep) -> Message:
     """
     Password Recovery
     """
-    user = get_user_by_email(session=session, email=email)
+    user = get_user_by_email_db(session=session, email=email)
 
     if not user:
         raise HTTPException(
@@ -89,7 +89,7 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
     email = verify_password_reset_token(token=body.token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = get_user_by_email(session=session, email=email)
+    user = get_user_by_email_db(session=session, email=email)
     if not user:
         raise HTTPException(
             status_code=404,
@@ -113,7 +113,7 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
     """
     HTML Content for Password Recovery
     """
-    user = get_user_by_email(session=session, email=email)
+    user = get_user_by_email_db(session=session, email=email)
 
     if not user:
         raise HTTPException(

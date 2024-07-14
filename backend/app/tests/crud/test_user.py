@@ -3,7 +3,7 @@ from sqlmodel import Session
 
 from app.crud.user import ( 
     create_user_db,
-    authenticate,
+    authenticate_user,
     update_user,
 )
 from app.core.security import verify_password
@@ -25,7 +25,7 @@ def test_authenticate_user(db: Session) -> None:
     password = random_lower_string()
     user_in = UserCreate(email=email, password=password)
     user = create_user_db(session=db, user_create=user_in)
-    authenticated_user = authenticate(session=db, email=email, password=password)
+    authenticated_user = authenticate_user(session=db, email=email, password=password)
     assert authenticated_user
     assert user.email == authenticated_user.email
 
@@ -33,7 +33,7 @@ def test_authenticate_user(db: Session) -> None:
 def test_not_authenticate_user(db: Session) -> None:
     email = random_email()
     password = random_lower_string()
-    user = authenticate(session=db, email=email, password=password)
+    user = authenticate_user(session=db, email=email, password=password)
     assert user is None
 
 

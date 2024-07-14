@@ -3,7 +3,7 @@ from sqlmodel import Session
 
 from app.crud.user import (
     create_user_db,
-    get_user_by_email,
+    get_user_by_email_db,
     update_user_db,
 )
 from app.core.config import settings
@@ -40,7 +40,7 @@ def authentication_token_from_email(
     If the user doesn't exist it is created first.
     """
     password = random_lower_string()
-    user = get_user_by_email(session=db, email=email)
+    user = get_user_by_email_db(session=db, email=email)
     if not user:
         user_in_create = UserCreate(email=email, password=password)
         user = create_user_db(session=db, user_create=user_in_create)

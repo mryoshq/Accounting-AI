@@ -3,7 +3,7 @@ import timeit
 from typing import List
 from fastapi import UploadFile
 
-from app.api.utils import load_env, encode_file_to_base64, check_and_call_openai, debug_log
+from app.api.gpt_utils import load_env, encode_file_to_base64, check_and_call_openai, debug_log
 
 def process_invoice(file: UploadFile, debug: bool = False):
     api_key = load_env()

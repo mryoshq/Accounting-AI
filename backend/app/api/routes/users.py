@@ -5,7 +5,7 @@ from sqlmodel import col, delete, func, select
 
 from app.crud.user import ( 
     create_user_db,
-    get_user_by_email,
+    get_user_by_email_db,
     update_user_db,
 )
 from app.api.deps import (
@@ -59,7 +59,7 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
     """
     Create new user.
     """
-    user = get_user_by_email(session=session, email=user_in.email)
+    user = get_user_by_email_db(session=session, email=user_in.email)
     if user:
         raise HTTPException(
             status_code=400,
@@ -89,7 +89,7 @@ def update_user_me(
     """
 
     if user_in.email:
-        existing_user = get_user_by_email(session=session, email=user_in.email)
+        existing_user = get_user_by_email_db(session=session, email=user_in.email)
         if existing_user and existing_user.id != current_user.id:
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"
@@ -156,7 +156,7 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
             status_code=403,
             detail="Open user registration is forbidden on this server",
         )
-    user = get_user_by_email(session=session, email=user_in.email)
+    user = get_user_by_email_db(session=session, email=user_in.email)
     if user:
         raise HTTPException(
             status_code=400,
@@ -208,7 +208,7 @@ def update_user(
             detail="The user with this id does not exist in the system",
         )
     if user_in.email:
-        existing_user = get_user_by_email(session=session, email=user_in.email)
+        existing_user = get_user_by_email_db(session=session, email=user_in.email)
         if existing_user and existing_user.id != user_id:
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"

@@ -15,7 +15,6 @@ def create_user_db(*, session: Session, user_in: UserCreate) -> User:
     session.refresh(db_obj)
     return db_obj
 
-
 def update_user_db(*, session: Session, db_user: User, user_in: UserUpdate) -> User:
     user_data = user_in.model_dump(exclude_unset=True)
     extra_data = {}
@@ -29,23 +28,20 @@ def update_user_db(*, session: Session, db_user: User, user_in: UserUpdate) -> U
     session.refresh(db_user)
     return db_user
 
-
-def get_user_by_email(*, session: Session, email: str) -> User | None:
+def get_user_by_email_db(*, session: Session, email: str) -> User | None:
     statement = select(User).where(User.email == email)
     session_user = session.exec(statement).first()
     return session_user
 
-
-def authenticate(*, session: Session, email: str, password: str) -> User | None:
-    db_user = get_user_by_email(session=session, email=email)
+def authenticate_user(*, session: Session, email: str, password: str) -> User | None:
+    db_user = get_user_by_email_db(session=session, email=email)
     if not db_user:
         return None
     if not verify_password(password, db_user.hashed_password):
         return None
     return db_user
 
-
-def create_item(*, session: Session, item_in: ItemCreate, owner_id: int) -> Item:
+def create_item_db(*, session: Session, item_in: ItemCreate, owner_id: int) -> Item:
     db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
     session.add(db_item)
     session.commit()
