@@ -12,7 +12,6 @@ import React from "react";
 import { useForm } from "react-hook-form";
 
 import {
-  ItemsService,
   UsersService,
   SuppliersService,
   CustomersService,
@@ -52,9 +51,6 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
 
   const deleteEntity = async (id: number) => {
     switch (type) {
-      case "Item":
-        await ItemsService.deleteItem({ id });
-        break;
       case "User":
         await UsersService.deleteUser({ userId: id });
         break;

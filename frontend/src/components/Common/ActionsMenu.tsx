@@ -10,7 +10,6 @@ import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
  
 import type { 
-  ItemPublic,
   UserPublic, 
   SupplierPublic,
   SupplierContactPublic,
@@ -25,7 +24,6 @@ import type {
 } from "../../client"
  
 import EditUser from "../Admin/EditUser"
-import EditItem from "../Items/EditItem"
 import EditProject from "../Projects/EditProject"
 import EditSupplier from "../Suppliers/EditSupplier"
 import EditSupplierContact from "../Suppliercontacts/EditSupplierContact"
@@ -42,7 +40,6 @@ import Delete from "./DeleteAlert";
 interface ActionsMenuProps {
   type: string;
   value:
-    | ItemPublic
     | UserPublic
     | SupplierPublic
     | CustomerPublic
@@ -68,7 +65,6 @@ const customLabels: { [key: string]: string } = {
 
 const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
   const editUserModal = useDisclosure();
-  const editItemModal = useDisclosure();
   const editSupplierModal = useDisclosure();
   const editSupplierContactModal = useDisclosure();
   const editCustomerModal = useDisclosure();
@@ -85,9 +81,6 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
     switch (type) {
       case "User":
         editUserModal.onOpen();
-        break;
-      case "Item":
-        editItemModal.onOpen();
         break;
       case "Supplier":
         editSupplierModal.onOpen();
@@ -155,13 +148,6 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
             user={value as UserPublic}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
-          />
-        )}
-        {type === "Item" && (
-          <EditItem
-            item={value as ItemPublic}
-            isOpen={editItemModal.isOpen}
-            onClose={editItemModal.onClose}
           />
         )}
         {type === "Supplier" && (
