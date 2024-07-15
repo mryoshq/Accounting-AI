@@ -161,7 +161,7 @@ const AddExternalInvoice = ({ isOpen, onClose, onCancel, prefillData, invoicePro
       const invoiceId = data.id;
       showToast("Success!", "External Invoice created successfully.", "success");
       reset();
-      onClose(invoiceId, prefillData?.matchedSupplier);
+      onClose(invoiceId, { id: data.supplier_id } as SupplierPublic);
     },
     onError: (err: ApiError) => {
       const errDetail = (err.body as any)?.detail;

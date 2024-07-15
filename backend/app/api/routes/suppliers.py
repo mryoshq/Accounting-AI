@@ -38,8 +38,8 @@ def read_all_supplier_contacts(
     """
     Retrieve all supplier contacts.
     """
-    contacts = suppliers_crud.get_supplier_contacts_db(session, skip=skip, limit=limit)
-    count = len(contacts)
+    contacts = suppliers_crud.get_all_supplier_contacts_db(session, skip=skip, limit=limit)
+    count = suppliers_crud.get_supplier_contacts_count_db(session)
     return SupplierContactsPublic(data=contacts, count=count)
 
 @router.get("/{supplier_id}", response_model=SupplierPublic)

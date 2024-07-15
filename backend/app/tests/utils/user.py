@@ -27,7 +27,7 @@ def create_random_user(db: Session) -> User:
     email = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=email, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
     return user
 
 
@@ -43,7 +43,7 @@ def authentication_token_from_email(
     user = get_user_by_email_db(session=db, email=email)
     if not user:
         user_in_create = UserCreate(email=email, password=password)
-        user = create_user_db(session=db, user_create=user_in_create)
+        user = create_user_db(session=db, user_in=user_in_create)
     else:
         user_in_update = UserUpdate(password=password)
         if not user.id:

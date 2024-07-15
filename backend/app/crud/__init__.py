@@ -1,1 +1,1 @@
-from . import user, projects, suppliers, customers, parts, payments_from_customers, payments_to_suppliers, external_invoices
+from . import user, projects, suppliers, customers, parts, payments_from_customers, payments_to_suppliers, external_invoices, internal_invoices

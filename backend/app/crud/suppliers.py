@@ -48,6 +48,15 @@ def get_supplier_contacts_db(session: Session, supplier_id: int) -> List[Supplie
     supplier = session.get(Supplier, supplier_id)
     return supplier.contacts if supplier else []
 
+def get_supplier_contacts_count_db(session: Session) -> int:
+    return session.exec(select(func.count()).select_from(SupplierContact)).one()
+
+def get_all_supplier_contacts_db(session: Session, skip: int = 0, limit: int = 100) -> List[SupplierContact]:
+    return session.exec(select(SupplierContact).offset(skip).limit(limit)).all()
+
+
+
+
 def get_supplier_contact_db(session: Session, contact_id: int) -> Optional[SupplierContact]:
     return session.get(SupplierContact, contact_id)
 
@@ -80,8 +89,14 @@ def get_supplier_payments_db(session: Session, supplier_id: int) -> List[Any]:
     supplier = session.get(Supplier, supplier_id)
     return supplier.payments_to_suppliers if supplier else []
 
+
+
+
+
+# --
 def get_supplier_parts_db(session: Session, supplier_id: int, skip: int = 0, limit: int = 100) -> List[Part]:
     return session.exec(select(Part).where(Part.supplier_id == supplier_id).offset(skip).limit(limit)).all()
 
 def get_supplier_parts_count_db(session: Session, supplier_id: int) -> int:
     return session.exec(select(func.count(Part.id)).where(Part.supplier_id == supplier_id)).one()
+# --

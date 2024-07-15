@@ -37,7 +37,8 @@ const ProcessInvoices: React.FC<ProcessInvoicesProps> = ({ isOpen, onClose, sele
   const [isPartModalOpen, setIsPartModalOpen] = useState<boolean>(false);
   const [invoiceId, setInvoiceId] = useState<number | undefined>(undefined);
   const [matchedEntity, setMatchedEntity] = useState<SupplierPublic | CustomerPublic | undefined>(undefined);
-
+  const [selectedSupplierId, setSelectedSupplierId] = useState<number | undefined>(undefined);
+  
   useEffect(() => {
     if (isOpen) {
       console.log("Modal opened. Current Invoice Index:", currentInvoiceIndex);
@@ -52,6 +53,9 @@ const ProcessInvoices: React.FC<ProcessInvoicesProps> = ({ isOpen, onClose, sele
     console.log("Invoice saved. Moving to next step...");
     setInvoiceId(id);
     setMatchedEntity(matched);
+    if (invoiceType === 'external' && matched && 'id' in matched) {
+      setSelectedSupplierId(matched.id);
+    }
     if (invoiceType === 'external') {
       setIsPartLoading(true);
       setCurrentPartIndex(0);
@@ -119,6 +123,15 @@ const ProcessInvoices: React.FC<ProcessInvoicesProps> = ({ isOpen, onClose, sele
     return `${year}-${month}-${day}`;
   };
 
+  const calculateDueDate = (invoiceDate: string | undefined) => {
+    if (!invoiceDate) return "";
+    const date = new Date(invoiceDate);
+    date.setDate(date.getDate() + 60); // Add 60 days
+    return formatDate(date.toISOString().split('T')[0]);
+  };
+  
+  
+
   const currentInvoiceData = processedData[currentInvoiceIndex]?.invoice_data;
   const currentItemData = currentInvoiceData?.items?.[currentPartIndex];
   const documentImage = processedData[currentInvoiceIndex]?.document_image;
@@ -128,7 +141,7 @@ const ProcessInvoices: React.FC<ProcessInvoicesProps> = ({ isOpen, onClose, sele
     invoice_date: formatDate(currentInvoiceData.invoice_date),
     amount_ttc: currentInvoiceData.total_amount_ttc,
     amount_ht: currentInvoiceData.total_amount_ht,
-    due_date: formatDate(currentInvoiceData.due_date),
+    due_date: currentInvoiceData.due_date ? formatDate(currentInvoiceData.due_date) : calculateDueDate(currentInvoiceData.invoice_date),
     vat: currentInvoiceData.total_vat_amount,
     currency_type: currentInvoiceData.currency,
     supplier: currentInvoiceData.supplier,
@@ -140,8 +153,7 @@ const ProcessInvoices: React.FC<ProcessInvoicesProps> = ({ isOpen, onClose, sele
     description: currentItemData.description,
     quantity: currentItemData.quantity,
     unit_price: currentItemData.unit_price,
-    //external_invoice_id: invoiceId,
-    [invoiceType === 'external' ? 'external_invoice_id' : 'internal_invoice_id']: invoiceId,
+    external_invoice_id: invoiceId,
 
   } : {};
 
@@ -223,16 +235,16 @@ const ProcessInvoices: React.FC<ProcessInvoicesProps> = ({ isOpen, onClose, sele
                             </Center>
                           ) : (
                             <AddPart
-                              key={currentPartIndex}
-                              isOpen={isPartModalOpen}
-                              onClose={handlePartSave}
-                              onCancel={handlePartCancel}
-                              prefillData={{
-                                ...partPrefillData,
-                                supplier_id: (matchedEntity as SupplierPublic)?.id,
-                              }}
-                              invoiceProcess={true}
-                            />
+  key={currentPartIndex}
+  isOpen={isPartModalOpen}
+  onClose={handlePartSave}
+  onCancel={handlePartCancel}
+  prefillData={{
+    ...partPrefillData,
+    supplier_id: selectedSupplierId || (matchedEntity as SupplierPublic)?.id,
+  }}
+  invoiceProcess={true}
+/>
                           )}
                         </Box>
                       )

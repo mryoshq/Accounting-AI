@@ -64,7 +64,7 @@ def test_get_existing_user(
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
     user_id = user.id
     r = client.get(
         f"{settings.API_V1_STR}/users/{user_id}",
@@ -81,7 +81,7 @@ def test_get_existing_user_current_user(client: TestClient, db: Session) -> None
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
     user_id = user.id
 
     login_data = {
@@ -122,7 +122,7 @@ def test_create_user_existing_username(
     # username = email
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    create_user_db(session=db, user_create=user_in)
+    create_user_db(session=db, user_in=user_in)
     data = {"email": username, "password": password}
     r = client.post(
         f"{settings.API_V1_STR}/users/",
@@ -154,12 +154,12 @@ def test_retrieve_users(
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    create_user_db(session=db, user_create=user_in)
+    create_user_db(session=db, user_in=user_in)
 
     username2 = random_email()
     password2 = random_lower_string()
     user_in2 = UserCreate(email=username2, password=password2)
-    create_user_db(session=db, user_create=user_in2)
+    create_user_db(session=db, user_in=user_in2)
 
     r = client.get(f"{settings.API_V1_STR}/users/", headers=superuser_token_headers)
     all_users = r.json()
@@ -253,7 +253,7 @@ def test_update_user_me_email_exists(
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
 
     data = {"email": user.email}
     r = client.patch(
@@ -349,7 +349,7 @@ def test_update_user(
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
 
     data = {"full_name": "Updated_full_name"}
     r = client.patch(
@@ -388,12 +388,12 @@ def test_update_user_email_exists(
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
 
     username2 = random_email()
     password2 = random_lower_string()
     user_in2 = UserCreate(email=username2, password=password2)
-    user2 = create_user_db(session=db, user_create=user_in2)
+    user2 = create_user_db(session=db, user_in=user_in2)
 
     data = {"email": user2.email}
     r = client.patch(
@@ -409,7 +409,7 @@ def test_delete_user_me(client: TestClient, db: Session) -> None:
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
     user_id = user.id
 
     login_data = {
@@ -454,7 +454,7 @@ def test_delete_user_super_user(
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
     user_id = user.id
     r = client.delete(
         f"{settings.API_V1_STR}/users/{user_id}",
@@ -499,7 +499,7 @@ def test_delete_user_without_privileges(
     username = random_email()
     password = random_lower_string()
     user_in = UserCreate(email=username, password=password)
-    user = create_user_db(session=db, user_create=user_in)
+    user = create_user_db(session=db, user_in=user_in)
 
     r = client.delete(
         f"{settings.API_V1_STR}/users/{user.id}",
