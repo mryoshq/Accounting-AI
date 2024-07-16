@@ -46,6 +46,11 @@ const SilentProcess: React.FC<SilentProcessProps> = ({ isOpen, onClose, processe
   const toast = useToast();
   const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+
+  useEffect(() => {
+    console.log(`Current invoice index: ${currentInvoiceIndex}`);
+  }, [currentInvoiceIndex]);
+  
   const { data: suppliers } = useQuery({
     queryKey: ["suppliers"],
     queryFn: () => SuppliersService.readSuppliers(),

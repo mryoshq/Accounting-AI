@@ -24,7 +24,20 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-      - run: docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} build
-      - run: docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} up -d
+      - name: List directory contents
+        run: |
+          pwd
+          ls -la
+      - name: Set up Docker
+        run: |
+          netsh interface ipv4 show excludedportrange protocol=tcp
+          net stop winnat
+          net start winnat
+          docker info
+          
+      - name: Build and deploy
+        run: |
+          docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} build
+          docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} up -d
