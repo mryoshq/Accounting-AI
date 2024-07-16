@@ -162,11 +162,16 @@ class SupplierContactsPublic(SQLModel):
 class ProjectBase(SQLModel):
     name: str
     description: Optional[str] = None
+    is_active: bool = True  # Add this line
+
 class ProjectCreate(ProjectBase):
     pass 
+
 class ProjectUpdate(ProjectBase):
     name: Optional[str] = None
     description: Optional[str] = None
+    is_active: Optional[bool] = None  # Add this line
+
 class Project(ProjectBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     parts: List["Part"] = Relationship(back_populates="project", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
@@ -174,12 +179,14 @@ class Project(ProjectBase, table=True):
     external_invoices: List["ExternalInvoice"] = Relationship(back_populates="project", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     payments_to_suppliers: List["PaymentToSupplier"] = Relationship(back_populates="project", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     payments_from_customers: List["PaymentFromCustomer"] = Relationship(back_populates="project", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+
 class ProjectPublic(ProjectBase):
     id: int 
+    is_active: bool  # Add this line
+
 class ProjectsPublic(SQLModel):
     data: List[ProjectPublic]
     count: int
-
 
 
 

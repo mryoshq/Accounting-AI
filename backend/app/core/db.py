@@ -5,7 +5,7 @@ from app.crud.user import (
 )
 
 from app.core.config import settings
-from app.models import User, UserCreate
+from app.models import User, UserCreate, Project
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -15,9 +15,7 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 def init_db(session: Session) -> None:
-    # Tables should be created with Alembic migrations
-    # But if you don't want to use migrations, create
-    # the tables un-commenting the next lines
+    # create table without alembic migraitons: 
     # from sqlmodel import SQLModel
 
     # from app.core.engine import engine
@@ -34,3 +32,17 @@ def init_db(session: Session) -> None:
             is_superuser=True,
         )
         user = create_user_db(session=session, user_in=user_in)
+
+    # Check and create Sourcing project
+    sourcing_project = session.exec(
+        select(Project).where(Project.name == "Sourcing")
+    ).first()
+    if not sourcing_project:
+        sourcing_project = Project(name="Sourcing", description="Default sourcing project")
+        session.add(sourcing_project)
+        session.commit()
+        print("Sourcing project created")
+    else:
+        print("Sourcing project already exists")
+
+    session.commit()

@@ -1,0 +1,146 @@
+tree -a -L 8
+.
+├── .DS_Store
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── alembic.ini
+├── app
+│   ├── .DS_Store
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-311.pyc
+│   │   ├── backend_pre_start.cpython-311.pyc
+│   │   ├── main.cpython-311.pyc
+│   │   ├── models.cpython-311.pyc
+│   │   ├── tests_pre_start.cpython-311.pyc
+│   │   └── utils.cpython-311.pyc
+│   ├── alembic
+│   │   ├── .DS_Store
+│   │   ├── __pycache__
+│   │   │   └── env.cpython-311.pyc
+│   │   ├── env.py
+│   │   ├── script.py.mako
+│   │   └── versions
+│   │       ├── .DS_Store
+│   │       ├── .keep
+│   │       ├── 0984f8c40ddf_initial_schema.py
+│   │       └── f231057028f2_add_is_active_to_project_model.py
+│   ├── api
+│   │   ├── .env
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── deps.cpython-311.pyc
+│   │   │   ├── gpt_process.cpython-311.pyc
+│   │   │   ├── gpt_utils.cpython-311.pyc
+│   │   │   └── main.cpython-311.pyc
+│   │   ├── deps.py
+│   │   ├── gpt_process.py
+│   │   ├── gpt_utils.py
+│   │   ├── main.py
+│   │   └── routes
+│   │       ├── ExternalInvoices.py
+│   │       ├── InternalInvoices.py
+│   │       ├── __init__.py
+│   │       ├── __pycache__
+│   │       │   ├── ExternalInvoices.cpython-311.pyc
+│   │       │   ├── InternalInvoices.cpython-311.pyc
+│   │       │   ├── __init__.cpython-311.pyc
+│   │       │   ├── customers.cpython-311.pyc
+│   │       │   ├── login.cpython-311.pyc
+│   │       │   ├── parts.cpython-311.pyc
+│   │       │   ├── paymentsfromcustomer.cpython-311.pyc
+│   │       │   ├── paymentstosupplier.cpython-311.pyc
+│   │       │   ├── projects.cpython-311.pyc
+│   │       │   ├── suppliers.cpython-311.pyc
+│   │       │   ├── users.cpython-311.pyc
+│   │       │   └── utils.cpython-311.pyc
+│   │       ├── customers.py
+│   │       ├── login.py
+│   │       ├── parts.py
+│   │       ├── paymentsfromcustomer.py
+│   │       ├── paymentstosupplier.py
+│   │       ├── projects.py
+│   │       ├── suppliers.py
+│   │       ├── users.py
+│   │       └── utils.py
+│   ├── backend_pre_start.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── config.cpython-311.pyc
+│   │   │   ├── db.cpython-311.pyc
+│   │   │   └── security.cpython-311.pyc
+│   │   ├── config.py
+│   │   ├── db.py
+│   │   └── security.py
+│   ├── crud
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── customers.cpython-311.pyc
+│   │   │   ├── external_invoices.cpython-311.pyc
+│   │   │   ├── internal_invoices.cpython-311.pyc
+│   │   │   ├── parts.cpython-311.pyc
+│   │   │   ├── payments_from_customers.cpython-311.pyc
+│   │   │   ├── payments_to_suppliers.cpython-311.pyc
+│   │   │   ├── projects.cpython-311.pyc
+│   │   │   ├── suppliers.cpython-311.pyc
+│   │   │   └── user.cpython-311.pyc
+│   │   ├── customers.py
+│   │   ├── external_invoices.py
+│   │   ├── internal_invoices.py
+│   │   ├── parts.py
+│   │   ├── payments_from_customers.py
+│   │   ├── payments_to_suppliers.py
+│   │   ├── projects.py
+│   │   ├── suppliers.py
+│   │   └── user.py
+│   ├── email-templates
+│   │   ├── build
+│   │   │   ├── new_account.html
+│   │   │   ├── reset_password.html
+│   │   │   └── test_email.html
+│   │   └── src
+│   │       ├── new_account.mjml
+│   │       ├── reset_password.mjml
+│   │       └── test_email.mjml
+│   ├── initial_data.py
+│   ├── main.py
+│   ├── models.py
+│   ├── tests
+│   │   ├── __init__.py
+│   │   ├── api
+│   │   │   ├── __init__.py
+│   │   │   └── routes
+│   │   │       ├── __init__.py
+│   │   │       ├── test_items.py
+│   │   │       ├── test_login.py
+│   │   │       └── test_users.py
+│   │   ├── conftest.py
+│   │   ├── crud
+│   │   │   ├── __init__.py
+│   │   │   └── test_user.py
+│   │   ├── scripts
+│   │   │   ├── __init__.py
+│   │   │   ├── test_backend_pre_start.py
+│   │   │   └── test_test_pre_start.py
+│   │   └── utils
+│   │       ├── __init__.py
+│   │       ├── item.py
+│   │       ├── user.py
+│   │       └── utils.py
+│   ├── tests_pre_start.py
+│   └── utils.py
+├── poetry.lock
+├── prestart.sh
+├── pyproject.toml
+├── scripts
+│   ├── format.sh
+│   ├── lint.sh
+│   └── test.sh
+└── tests-start.sh
+
+24 directories, 119 files
