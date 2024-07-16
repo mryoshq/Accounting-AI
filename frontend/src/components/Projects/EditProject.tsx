@@ -4,6 +4,7 @@ import {
   FormErrorMessage,
   FormLabel,
   Input,
+  Checkbox,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -95,6 +96,14 @@ const EditProject = ({ project, isOpen, onClose }: EditProjectProps) => {
               placeholder="Description"
               type="text"
             />
+          </FormControl>
+          <FormControl mt={4}>
+            <Checkbox
+              {...register("is_active")}
+              colorScheme="teal"
+            >
+              Is active?
+            </Checkbox>
           </FormControl>
         </ModalBody>
         <ModalFooter gap={3}>

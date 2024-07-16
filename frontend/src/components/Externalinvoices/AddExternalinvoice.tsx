@@ -77,7 +77,7 @@ const AddExternalInvoice = ({ isOpen, onClose, onCancel, prefillData, invoicePro
       amount_ht: 0,
       currency_type: "MAD",
       supplier_id: suppliers?.data[0]?.id || 0,
-      project_id: 0,
+      project_id: 1,
       ...prefillData,
     },
   });

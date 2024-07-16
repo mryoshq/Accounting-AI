@@ -1374,6 +1374,10 @@ export const $ProjectCreate = {
 	type: 'null',
 }],
 },
+		is_active: {
+	type: 'boolean',
+	default: true,
+},
 	},
 } as const;
 
@@ -1390,6 +1394,10 @@ export const $ProjectPublic = {
 }, {
 	type: 'null',
 }],
+},
+		is_active: {
+	type: 'boolean',
+	isRequired: true,
 },
 		id: {
 	type: 'number',
@@ -1412,6 +1420,14 @@ export const $ProjectUpdate = {
 	type: 'any-of',
 	contains: [{
 	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		is_active: {
+	type: 'any-of',
+	contains: [{
+	type: 'boolean',
 }, {
 	type: 'null',
 }],

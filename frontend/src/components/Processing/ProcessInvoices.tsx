@@ -235,16 +235,16 @@ const ProcessInvoices: React.FC<ProcessInvoicesProps> = ({ isOpen, onClose, sele
                             </Center>
                           ) : (
                             <AddPart
-  key={currentPartIndex}
-  isOpen={isPartModalOpen}
-  onClose={handlePartSave}
-  onCancel={handlePartCancel}
-  prefillData={{
-    ...partPrefillData,
-    supplier_id: selectedSupplierId || (matchedEntity as SupplierPublic)?.id,
-  }}
-  invoiceProcess={true}
-/>
+                              key={currentPartIndex}
+                              isOpen={isPartModalOpen}
+                              onClose={handlePartSave}
+                              onCancel={handlePartCancel}
+                              prefillData={{
+                                ...partPrefillData,
+                                supplier_id: selectedSupplierId || (matchedEntity as SupplierPublic)?.id,
+                              }}
+                              invoiceProcess={true}
+                            />
                           )}
                         </Box>
                       )

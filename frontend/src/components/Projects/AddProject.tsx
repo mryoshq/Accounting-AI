@@ -5,6 +5,7 @@ import {
   FormErrorMessage,
   FormLabel,
   Input,
+  Checkbox,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -51,11 +52,13 @@ const AddProject = ({ isOpen, onClose, onProjectCreated }: AddProjectProps) => {
   const initialValues: ProjectCreate = {
     name: "",
     description: "",
+    is_active: true,
   };
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required."),
     description: Yup.string(),
+    is_active: Yup.boolean(),
   });
 
   const onSubmit = (values: ProjectCreate, actions: FormikHelpers<ProjectCreate>) => {
@@ -93,6 +96,15 @@ const AddProject = ({ isOpen, onClose, onProjectCreated }: AddProjectProps) => {
                     <FormControl mt={4}>
                       <FormLabel htmlFor="description">Description</FormLabel>
                       <Input {...field} id="description" placeholder="Description" type="text" />
+                    </FormControl>
+                  )}
+                </Field>
+                <Field name="is_active">
+                  {({ field }: FieldProps) => (
+                    <FormControl mt={4}>
+                      <Checkbox {...field} id="is_active" colorScheme="teal" isChecked={field.value}>
+                        Is active?
+                      </Checkbox>
                     </FormControl>
                   )}
                 </Field>

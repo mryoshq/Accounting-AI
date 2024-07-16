@@ -185,7 +185,7 @@ const SilentProcess: React.FC<SilentProcessProps> = ({ isOpen, onClose, processe
       due_date: dueDate.toISOString().split('T')[0],
       vat: invoiceData.total_vat_amount || 0,
       currency_type: invoiceData.currency || "MAD",
-      project_id: 0, // You might want to handle project assignment similarly
+      project_id: 1, // Default project ID
     };
 
     let payload: ExternalInvoiceCreate | InternalInvoiceCreate;

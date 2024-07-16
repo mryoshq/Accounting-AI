@@ -8,10 +8,6 @@ import {
   CardHeader,
   CardBody,
   Badge,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Icon,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -21,7 +17,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ProjectsService, type ProjectPublic } from "../../client";
 import ActionsMenu from "../../components/Common/ActionsMenu";
 import Navbar from "../../components/Common/Navbar";
-import { FiSearch } from "react-icons/fi";
 
 export const Route = createFileRoute("/_layout/projects")({
   component: Projects,
@@ -34,23 +29,26 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
 
   return (
     <Card bg={cardBg} shadow="md" borderRadius="lg" width="100%" height="150px">
-    <CardHeader>
-      <Flex justifyContent="space-between" alignItems="center">
-        <Heading size="md" color={textColor}>{project.name}</Heading>
-        <Badge colorScheme="green">Active</Badge>
-      </Flex>
-    </CardHeader>
-    <CardBody>
-      <Flex justifyContent="space-between" alignItems="flex-start">
-        <Text color={descriptionColor} pl={4} flex={1}>
-          {project.description || "No description available"}
-        </Text>
-        <ActionsMenu type="Project" value={project} />
-      </Flex>
-    </CardBody>
-  </Card>
+      <CardHeader>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Heading size="md" color={textColor}>{project.name}</Heading>
+          <Badge colorScheme={project.is_active ? "green" : "brown"}>
+            {project.is_active ? "Active" : "shelfed"}
+          </Badge>
+        </Flex>
+      </CardHeader>
+      <CardBody>
+        <Flex justifyContent="space-between" alignItems="flex-start">
+          <Text color={descriptionColor} pl={4} flex={1}>
+            {project.description || "No description available"}
+          </Text>
+          <ActionsMenu type="Project" value={project} />
+        </Flex>
+      </CardBody>
+    </Card>
   );
 }
+
 
 function ProjectsList() {
   const { data: projects } = useSuspenseQuery({
@@ -78,12 +76,7 @@ function Projects() {
           <Navbar type="Project" />
         </Flex>
         
-        <InputGroup mb={4}>
-          <InputLeftElement pointerEvents="none">
-            <Icon as={FiSearch} color="gray.300" />
-          </InputLeftElement>
-          <Input type="text" placeholder="Search projects..." />
-        </InputGroup>
+   
       </Box>
 
       <Box flex="1" overflow="auto" width="100%" px={4} pb={4}>

@@ -380,6 +380,7 @@ export type PaymentToSuppliersPublic = {
 export type ProjectCreate = {
 	name: string;
 	description?: string | null;
+	is_active?: boolean;
 };
 
 
@@ -387,6 +388,7 @@ export type ProjectCreate = {
 export type ProjectPublic = {
 	name: string;
 	description?: string | null;
+	is_active: boolean;
 	id: number;
 };
 
@@ -395,6 +397,7 @@ export type ProjectPublic = {
 export type ProjectUpdate = {
 	name?: string | null;
 	description?: string | null;
+	is_active?: boolean | null;
 };
 
 

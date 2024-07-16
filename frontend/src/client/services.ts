@@ -651,7 +651,10 @@ export type TDataCreateSupplierContact = {
                 requestBody: SupplierContactCreate
                 
             }
-
+export type TDataReadContact = {
+                contactId: number
+                
+            }
 export type TDataUpdateSupplierContact = {
                 contactId: number
 requestBody: SupplierContactUpdate
@@ -659,11 +662,6 @@ requestBody: SupplierContactUpdate
             }
 export type TDataDeleteSupplierContact = {
                 contactId: number
-                
-            }
-export type TDataReadSupplierContact = {
-                contactId: number
-supplierId: number
                 
             }
 export type TDataReadExternalInvoicesForSupplier = {
@@ -932,29 +930,6 @@ contactId,
 	}
 
 	/**
-	 * Read Supplier Contact
-	 * Get contact by supplier ID and contact ID.
-	 * @returns SupplierContactPublic Successful Response
-	 * @throws ApiError
-	 */
-	public static readSupplierContact(data: TDataReadSupplierContact): CancelablePromise<SupplierContactPublic> {
-		const {
-contactId,
-supplierId,
-} = data;
-		return __request(OpenAPI, {
-			method: 'GET',
-			url: '/api/v1/suppliers/{supplier_id}/contacts/{contact_id}',
-			path: {
-				supplier_id: supplierId, contact_id: contactId
-			},
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-	/**
 	 * Read External Invoices For Supplier
 	 * Retrieve all external invoices for a specific supplier.
 	 * @returns ExternalInvoicesPublic Successful Response
@@ -1073,11 +1048,6 @@ requestBody: CustomerContactUpdate
             }
 export type TDataDeleteCustomerContact = {
                 contactId: number
-                
-            }
-export type TDataReadCustomerContact = {
-                contactId: number
-customerId: number
                 
             }
 export type TDataReadInternalInvoicesForCustomer = {
@@ -1332,29 +1302,6 @@ contactId,
 			url: '/api/v1/customers/contacts/{contact_id}',
 			path: {
 				contact_id: contactId
-			},
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-	/**
-	 * Read Customer Contact
-	 * Get contact by customer ID and contact ID.
-	 * @returns CustomerContactPublic Successful Response
-	 * @throws ApiError
-	 */
-	public static readCustomerContact(data: TDataReadCustomerContact): CancelablePromise<CustomerContactPublic> {
-		const {
-contactId,
-customerId,
-} = data;
-		return __request(OpenAPI, {
-			method: 'GET',
-			url: '/api/v1/customers/{customer_id}/contacts/{contact_id}',
-			path: {
-				customer_id: customerId, contact_id: contactId
 			},
 			errors: {
 				422: `Validation Error`,
