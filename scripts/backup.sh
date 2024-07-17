@@ -2,6 +2,11 @@
 
 set -e
 
+# Source the environment variables from the .env file in the parent directory
+if [ -f /scripts/../.env ]; then
+  export $(cat /scripts/../.env | grep -v '#' | awk '/=/ {print $1}')
+fi
+
 BACKUP_DIR="/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql.gz"
