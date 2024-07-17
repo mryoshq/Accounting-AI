@@ -3,7 +3,7 @@
 set -e
 
 # Hardcoded environment variables
-PGHOST="localhost"
+PGHOST="db"
 PGPORT="5432"
 PGDATABASE="app"
 PGUSER="postgres"
