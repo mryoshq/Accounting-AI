@@ -76,7 +76,7 @@ jobs:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
       run: |
         docker-compose -f docker-compose.yml --project-name $STACK_NAME build
-        docker-compose -f docker-compose.yml --project-name $STACK_NAME up -d
+        docker-compose -f docker-compose.yml --project-name $STACK_NAME up --detach
 
     - name: Check running containers
       run: docker ps
