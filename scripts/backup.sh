@@ -5,15 +5,10 @@ set -e
 # Path to the .env file
 ENV_FILE="/scripts/.env"
 
-# Convert Windows-style line endings to Unix-style
-sed -i 's/\r$//' $ENV_FILE
-
 # Check if the .env file exists
 if [ -f $ENV_FILE ]; then
-    # Export variables from the .env file
-    set -o allexport
-    source $ENV_FILE
-    set +o allexport
+    # Export variables from the .env file using envsubst
+    export $(grep -v '^#' $ENV_FILE | xargs)
 else
     echo "Error: .env file not found at $ENV_FILE"
     exit 1

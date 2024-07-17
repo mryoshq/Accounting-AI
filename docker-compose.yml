@@ -150,6 +150,7 @@ services:
       /bin/bash -c "
         apt-get update &&
         apt-get install -y cron &&
+        apt-get install -y gettext-base &&
         chmod +x /scripts/backup.sh &&
         echo '*/3 * * * * /scripts/backup.sh >> /var/log/cron.log 2>&1' > /etc/cron.d/backup-cron &&
         chmod 0644 /etc/cron.d/backup-cron &&
