@@ -141,33 +141,22 @@ services:
       - .env
     environment:
       - PGHOST=db
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
-      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+      - PGUSER=${POSTGRES_USER}
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - PGDATABASE=${POSTGRES_DB}
     entrypoint: []
     command: >
       /bin/bash -c "
         apt-get update &&
         apt-get install -y cron &&
-        chmod +x /scripts/backup.sh &&
-        cat << 'EOF' > /scripts/wrapper.sh
-        #!/bin/bash
-        export PGHOST=db
-        export PGUSER=$POSTGRES_USER
-        export PGPASSWORD=$POSTGRES_PASSWORD
-        export PGDATABASE=$POSTGRES_DB
-        /scripts/backup.sh >> /var/log/cron.log 2>&1
-        EOF
-        &&
-        chmod +x /scripts/wrapper.sh &&
-        echo '*/3 * * * * /scripts/wrapper.sh' > /etc/cron.d/backup-cron &&
+        chmod +x /scripts/backup.sh /scripts/backup-wrapper.sh &&
+        echo '*/3 * * * * /scripts/backup-wrapper.sh' > /etc/cron.d/backup-cron &&
         chmod 0644 /etc/cron.d/backup-cron &&
         crontab /etc/cron.d/backup-cron &&
         touch /var/log/cron.log &&
         cron &&
         tail -f /var/log/cron.log
       "
-
     depends_on:
       - db
 
