@@ -29,7 +29,7 @@ jobs:
       - name: List directory contents
         run: |
           pwd
-          ls -la
+          ls
       - name: Set up Docker
         run: |
           netsh interface ipv4 show excludedportrange protocol=tcp
