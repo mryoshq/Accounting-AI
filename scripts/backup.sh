@@ -13,13 +13,17 @@ echo "PGUSER: $PGUSER"
 echo "PGDATABASE: $PGDATABASE"
 
 echo "Creating backup: $BACKUP_FILE"
-pg_dump -v -h "$PGHOST" -U "$PGUSER" "$PGDATABASE" | gzip > "$BACKUP_FILE"
-
-if [ $? -eq 0 ]; then
+if pg_dump -v -h "$PGHOST" -U "$PGUSER" "$PGDATABASE" | gzip > "$BACKUP_FILE"; then
     echo "Backup completed successfully"
     ls -lh "$BACKUP_FILE"
 else
     echo "Backup failed"
+    exit 1
+fi
+
+# Check if the backup file is empty
+if [ ! -s "$BACKUP_FILE" ]; then
+    echo "Error: Backup file is empty"
     exit 1
 fi
 

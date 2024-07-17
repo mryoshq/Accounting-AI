@@ -150,7 +150,14 @@ services:
         apt-get update &&
         apt-get install -y cron &&
         chmod +x /scripts/backup.sh &&
-        echo '*/3 * * * * /scripts/backup.sh >> /var/log/cron.log 2>&1' > /etc/cron.d/backup-cron &&
+        echo '#!/bin/bash' > /scripts/wrapper.sh &&
+        echo 'export PGHOST=db' >> /scripts/wrapper.sh &&
+        echo 'export PGUSER=$${POSTGRES_USER}' >> /scripts/wrapper.sh &&
+        echo 'export PGPASSWORD=$${POSTGRES_PASSWORD}' >> /scripts/wrapper.sh &&
+        echo 'export PGDATABASE=$${POSTGRES_DB}' >> /scripts/wrapper.sh &&
+        echo '/scripts/backup.sh >> /var/log/cron.log 2>&1' >> /scripts/wrapper.sh &&
+        chmod +x /scripts/wrapper.sh &&
+        echo '*/3 * * * * /scripts/wrapper.sh' > /etc/cron.d/backup-cron &&
         chmod 0644 /etc/cron.d/backup-cron &&
         crontab /etc/cron.d/backup-cron &&
         touch /var/log/cron.log &&
@@ -158,8 +165,7 @@ services:
         tail -f /var/log/cron.log
       "
     depends_on:
-      db:
-        condition: service_healthy
+      - db
 
 
 volumes:
