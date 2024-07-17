@@ -5,6 +5,9 @@ set -e
 # Path to the .env file
 ENV_FILE="/scripts/.env"
 
+# Convert Windows-style line endings to Unix-style
+sed -i 's/\r$//' $ENV_FILE
+
 # Check if the .env file exists
 if [ -f $ENV_FILE ]; then
     # Export variables from the .env file
