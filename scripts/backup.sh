@@ -2,9 +2,9 @@
 
 set -e
 
-# Source the environment variables from the .env file in the parent directory
-if [ -f /scripts/../.env ]; then
-  export $(cat /scripts/../.env | grep -v '#' | awk '/=/ {print $1}')
+# Source the environment variables from the .env file in /scripts directory
+if [ -f /scripts/.env ]; then
+  export $(cat /scripts/.env | grep -v '#' | awk '/=/ {print $1}')
 fi
 
 BACKUP_DIR="/backups"

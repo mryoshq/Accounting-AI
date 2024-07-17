@@ -137,6 +137,7 @@ services:
     volumes:
       - ./scripts:/scripts
       - app-db-backups:/backups
+      - ./.env:/scripts/.env
     env_file:
       - .env
     environment:
