@@ -3,11 +3,11 @@
 set -e
 
 # Hardcoded environment variables
-PGHOST="db"
-PGPORT="5432"
-PGDATABASE="app"
-PGUSER="postgres"
-PGPASSWORD="password"
+export PGHOST="db"  # Use the service name defined in Docker Compose
+export PGPORT="5432"
+export PGDATABASE="app"
+export PGUSER="postgres"
+export PGPASSWORD="password"
 
 echo "Script is running as user: $(whoami)"
 echo "Current directory: $(pwd)"
@@ -20,6 +20,12 @@ echo "PGPORT=${PGPORT}"
 echo "PGDATABASE=${PGDATABASE}"
 echo "PGUSER=${PGUSER}"
 echo "PGPASSWORD=${PGPASSWORD}"
+
+# Create .pgpass file
+PGPASSFILE="/root/.pgpass"
+echo "${PGHOST}:${PGPORT}:${PGDATABASE}:${PGUSER}:${PGPASSWORD}" > $PGPASSFILE
+chmod 600 $PGPASSFILE
+export PGPASSFILE
 
 BACKUP_DIR="/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
