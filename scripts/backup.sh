@@ -7,18 +7,15 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql.gz"
 
 echo "Starting backup process at $(date)"
-echo "Script location: $0"
-echo "Current working directory: $(pwd)"
 echo "Environment variables:"
 env | grep PG
 
 echo "Creating backup: $BACKUP_FILE"
-if pg_dump -v -h "$PGHOST" -U "$PGUSER" "$PGDATABASE" 2>/tmp/pg_dump_error.log | gzip > "$BACKUP_FILE"; then
+if pg_dump -v | gzip > "$BACKUP_FILE"; then
     echo "Backup completed successfully"
     ls -lh "$BACKUP_FILE"
 else
-    echo "Backup failed. Error log:"
-    cat /tmp/pg_dump_error.log
+    echo "Backup failed"
     exit 1
 fi
 
