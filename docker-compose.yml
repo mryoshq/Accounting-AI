@@ -138,7 +138,7 @@ services:
       - ./scripts:/scripts
       - app-db-backups:/backups
     environment:
-      - PGHOST=localhost
+      - PGHOST=db
       - PGPORT=5432
       - PGDATABASE=app
       - PGUSER=postgres
