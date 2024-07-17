@@ -76,7 +76,6 @@ jobs:
         dir
 
     - name: Set up Traefik environment variables
-      shell: pwsh
       run: |
         echo "HASHED_PASSWORD=$env:HASHED_PASSWORD" >> $env:GITHUB_ENV
 
