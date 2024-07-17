@@ -137,7 +137,6 @@ services:
     volumes:
       - ./scripts:/scripts
       - app-db-backups:/backups
-      - ./.env:/scripts/.env
     env_file:
       - .env
     environment:
@@ -150,6 +149,8 @@ services:
       /bin/bash -c "
         apt-get update &&
         apt-get install -y cron &&
+        apt-get install -y dos2unix &&  # Install dos2unix
+        dos2unix /scripts/.env &&       # Convert line endings
         chmod +x /scripts/backup.sh &&
         echo '*/3 * * * * /scripts/backup.sh >> /var/log/cron.log 2>&1' > /etc/cron.d/backup-cron &&
         chmod 0644 /etc/cron.d/backup-cron &&
@@ -160,6 +161,7 @@ services:
       "
     depends_on:
       - db
+
 
 
 volumes:
