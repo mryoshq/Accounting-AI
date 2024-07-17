@@ -60,8 +60,12 @@ jobs:
         docker network ls
 
     - name: Create traefik-public network
-      run: docker network create traefik-public || true
-
+      run: |
+        if (-not (docker network ls --format '{{.Name}}' | Select-String -Quiet '^traefik-public$')) {
+          docker network create traefik-public
+        } else {
+          Write-Host "traefik-public network already exists"
+        }
     - name: List directory contents
       run: |
         pwd
