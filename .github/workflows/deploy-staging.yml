@@ -13,6 +13,9 @@ jobs:
     env:
       ENVIRONMENT: staging
       DOMAIN: ${{ secrets.DOMAIN_STAGING }}
+      USERNAME: ${{ secrets.TRAEFIK_USERNAME }}
+      PASSWORD: ${{ secrets.TRAEFIK_PASSWORD }}
+      EMAIL: ${{ secrets.TRAEFIK_EMAIL }}
       STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       FIRST_SUPERUSER: ${{ secrets.FIRST_SUPERUSER }}
@@ -71,6 +74,11 @@ jobs:
         pwd
         dir
 
+     - name: Set up Traefik environment variables
+      run: |
+        $env:HASHED_PASSWORD = openssl passwd -apr1 $env:PASSWORD
+        echo "HASHED_PASSWORD=$env:HASHED_PASSWORD" | Out-File -FilePath $env:GITHUB_ENV -Append
+
     - name: Build and deploy
       env:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
@@ -81,7 +89,7 @@ jobs:
         docker compose -f docker-compose.traefik.yml --project-name $env:STACK_NAME up -d
         # Start the rest of the services
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME up -d
-      
+
     - name: Check running containers
       run: docker ps
 
