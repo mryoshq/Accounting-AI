@@ -72,9 +72,12 @@ jobs:
         dir
 
     - name: Build and deploy
-    - run: docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} build
-    - run: docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} up -d
-
+      env:
+        STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
+      run: |
+        docker compose -f docker-compose.yml --project-name $env:STACK_NAME build
+        docker compose -f docker-compose.yml --project-name $env:STACK_NAME up -d
+      
     - name: Check running containers
       run: docker ps
 
