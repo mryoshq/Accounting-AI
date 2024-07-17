@@ -83,11 +83,8 @@ jobs:
       env:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
       run: |
-        # Build the images
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME build
-        # Start Traefik
         docker compose -f docker-compose.traefik.yml --project-name $env:STACK_NAME up -d
-        # Start the rest of the services
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME up -d
 
     - name: Check running containers
