@@ -74,7 +74,7 @@ jobs:
         pwd
         dir
 
-     - name: Set up Traefik environment variables
+    - name: Set up Traefik environment variables
       run: |
         $env:HASHED_PASSWORD = openssl passwd -apr1 $env:PASSWORD
         echo "HASHED_PASSWORD=$env:HASHED_PASSWORD" | Out-File -FilePath $env:GITHUB_ENV -Append
