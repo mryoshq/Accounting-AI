@@ -141,9 +141,9 @@ services:
       - .env
     environment:
       - PGHOST=db
-      - PGUSER=${POSTGRES_USER}
-      - PGPASSWORD=${POSTGRES_PASSWORD}
-      - PGDATABASE=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
     entrypoint: []
     command: >
       /bin/bash -c "
