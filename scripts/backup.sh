@@ -2,6 +2,13 @@
 
 set -e
 
+# Hardcoded environment variables
+export PGHOST="db"  # Use the service name defined in Docker Compose
+export PGPORT="5432"
+export PGDATABASE="app"
+export PGUSER="postgres"
+export PGPASSWORD="password"
+
 echo "Script is running as user: $(whoami)"
 echo "Current directory: $(pwd)"
 echo "Listing /scripts directory:"
@@ -27,6 +34,7 @@ BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql.gz"
 echo "Starting backup process at $(date)"
 echo "Creating backup: $BACKUP_FILE"
 
+# Run pg_dump with detailed debugging
 echo "Running pg_dump command:"
 echo "pg_dump -h ${PGHOST} -U ${PGUSER} -d ${PGDATABASE} -v"
 
@@ -38,6 +46,7 @@ else
     exit 1
 fi
 
+# Check if the backup file is empty
 if [ ! -s "$BACKUP_FILE" ]; then
     echo "Error: Backup file is empty"
     exit 1
