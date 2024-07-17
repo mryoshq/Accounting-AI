@@ -137,20 +137,17 @@ services:
     volumes:
       - ./scripts:/scripts
       - app-db-backups:/backups
-      - .env:/scripts/.env  # Ensure .env file is accessible in /scripts
-    env_file:
-      - .env
     environment:
-      - PGHOST=db
-      - PGUSER=${POSTGRES_USER}
-      - PGPASSWORD=${POSTGRES_PASSWORD}
-      - PGDATABASE=${POSTGRES_DB}
+      - PGHOST=localhost
+      - PGPORT=5432
+      - PGDATABASE=app
+      - PGUSER=postgres
+      - PGPASSWORD=password
     entrypoint: []
     command: >
       /bin/bash -c "
         apt-get update &&
         apt-get install -y cron &&
-        apt-get install -y gettext-base &&
         chmod +x /scripts/backup.sh &&
         echo '*/3 * * * * /scripts/backup.sh >> /var/log/cron.log 2>&1' > /etc/cron.d/backup-cron &&
         chmod 0644 /etc/cron.d/backup-cron &&
@@ -161,6 +158,7 @@ services:
       "
     depends_on:
       - db
+
 
 
 

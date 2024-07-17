@@ -2,28 +2,37 @@
 
 set -e
 
-# Path to the .env file
-ENV_FILE="/scripts/.env"
+# Hardcoded environment variables
+PGHOST="localhost"
+PGPORT="5432"
+PGDATABASE="app"
+PGUSER="postgres"
+PGPASSWORD="password"
 
-# Check if the .env file exists
-if [ -f $ENV_FILE ]; then
-    # Export variables from the .env file using envsubst
-    export $(grep -v '^#' $ENV_FILE | xargs)
-else
-    echo "Error: .env file not found at $ENV_FILE"
-    exit 1
-fi
+echo "Script is running as user: $(whoami)"
+echo "Current directory: $(pwd)"
+echo "Listing /scripts directory:"
+ls -l /scripts
+
+echo "Environment variables:"
+echo "PGHOST=${PGHOST}"
+echo "PGPORT=${PGPORT}"
+echo "PGDATABASE=${PGDATABASE}"
+echo "PGUSER=${PGUSER}"
+echo "PGPASSWORD=${PGPASSWORD}"
 
 BACKUP_DIR="/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql.gz"
 
 echo "Starting backup process at $(date)"
-echo "Environment variables:"
-env | grep PG
-
 echo "Creating backup: $BACKUP_FILE"
-if pg_dump -v | gzip > "$BACKUP_FILE"; then
+
+# Run pg_dump with detailed debugging
+echo "Running pg_dump command:"
+echo "pg_dump -h ${PGHOST} -U ${PGUSER} -d ${PGDATABASE} -v"
+
+if pg_dump -h "${PGHOST}" -U "${PGUSER}" -d "${PGDATABASE}" -v | gzip > "$BACKUP_FILE"; then
     echo "Backup completed successfully"
     ls -lh "$BACKUP_FILE"
 else
