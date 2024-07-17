@@ -141,11 +141,15 @@ services:
       - PGDATABASE=${POSTGRES_DB}
     entrypoint: []
     command: >
-        /bin/sh -c "
+      /bin/bash -c "
+        apt-get update &&
+        apt-get install -y cron &&
         chmod +x /scripts/backup.sh &&
-        echo '*/3 * * * * /scripts/backup.sh' > /etc/crontabs/root &&
-        crond -f -d 8
-        "
+        echo '*/3 * * * * /scripts/backup.sh' > /etc/cron.d/backup-cron &&
+        chmod 0644 /etc/cron.d/backup-cron &&
+        crontab /etc/cron.d/backup-cron &&
+        cron -f
+      "
     depends_on:
       - db
 
