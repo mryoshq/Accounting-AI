@@ -124,9 +124,36 @@ services:
       # Middleware to redirect www, and redirect HTTP to HTTPS
       # to disable www redirection remove the section: ${STACK_NAME?Variable not set}-www-redirect,
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
+  
+  backup:
+    image: postgres:12
+    networks:
+      - default
+    volumes:
+      - ./scripts:/scripts
+      - app-db-backups:/backups
+    env_file:
+      - .env
+    environment:
+      - PGHOST=db
+      - PGUSER=${POSTGRES_USER}
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - PGDATABASE=${POSTGRES_DB}
+    entrypoint: []
+    command: >
+        /bin/sh -c "
+        chmod +x /scripts/backup.sh &&
+        echo '*/3 * * * * /scripts/backup.sh' > /etc/crontabs/root &&
+        crond -f -d 8
+        "
+    depends_on:
+      - db
+
 
 volumes:
   app-db-data:
+  app-db-backups:
+
 
 networks:
   traefik-public:
