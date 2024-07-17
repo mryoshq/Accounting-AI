@@ -24,13 +24,34 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Check current user
       run: |
         whoami
         echo "Current user: $env:USERNAME"
+
+    - name: Add directory to Git safe directories
+      run: |
+        git config --global --add safe.directory C:/actions-runner/_work/accounting/accounting
+        git config --global --list
+
+    - name: Check directory ownership
+      run: |
+        icacls C:/actions-runner/_work/accounting/accounting
+
+    - name: Change directory ownership
+      run: |
+        takeown /F C:/actions-runner/_work/accounting/accounting /R /D Y
+        icacls C:/actions-runner/_work/accounting/accounting /grant "githubActionsRunner:(OI)(CI)F" /T
+        icacls C:/actions-runner/_work/accounting/accounting
+
+    - name: Verify Git configuration
+      run: |
+        git config --list --show-origin
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Check Docker status
       run: |
