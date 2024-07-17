@@ -26,6 +26,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+    - name: Check current user
+    run: |
+      whoami
+      echo "Current user: $env:USERNAME"
     
     - name: Check Docker status
       run: |
