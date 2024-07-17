@@ -11,6 +11,11 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   adminer:
     image: adminer
@@ -145,13 +150,16 @@ services:
         apt-get update &&
         apt-get install -y cron &&
         chmod +x /scripts/backup.sh &&
-        echo '*/3 * * * * /scripts/backup.sh' > /etc/cron.d/backup-cron &&
+        echo '*/3 * * * * /scripts/backup.sh >> /var/log/cron.log 2>&1' > /etc/cron.d/backup-cron &&
         chmod 0644 /etc/cron.d/backup-cron &&
         crontab /etc/cron.d/backup-cron &&
-        cron -f
+        touch /var/log/cron.log &&
+        cron &&
+        tail -f /var/log/cron.log
       "
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 
 volumes:
