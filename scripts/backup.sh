@@ -2,9 +2,18 @@
 
 set -e
 
-# Source the environment variables from the .env file in /scripts directory
-if [ -f /scripts/.env ]; then
-  export $(cat /scripts/.env | grep -v '#' | awk '/=/ {print $1}')
+# Path to the .env file
+ENV_FILE="/scripts/.env"
+
+# Check if the .env file exists
+if [ -f $ENV_FILE ]; then
+    # Export variables from the .env file
+    set -o allexport
+    source $ENV_FILE
+    set +o allexport
+else
+    echo "Error: .env file not found at $ENV_FILE"
+    exit 1
 fi
 
 BACKUP_DIR="/backups"
