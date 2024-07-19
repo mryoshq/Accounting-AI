@@ -12,7 +12,7 @@ from app.models import (
 )
 from app.models import PaymentFromCustomersPublic
 from app.models import InvoiceProcessingResponse
-from app.api import gpt_process
+from app.api.routes.tools import gpt_process
 from app.crud import internal_invoices as internal_invoices_crud
 
 router = APIRouter()

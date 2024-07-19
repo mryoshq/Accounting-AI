@@ -1,11 +1,13 @@
+from app.api.routes.tools import utils
 from fastapi import APIRouter
 
-from app.api.routes import login, users, utils
+from app.api.routes import login, users
 from app.api.routes import projects
 from app.api.routes import suppliers, customers
 from app.api.routes import parts
 from app.api.routes import ExternalInvoices, InternalInvoices
 from app.api.routes import paymentstosupplier, paymentsfromcustomer
+from app.api.routes import reporting
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])
@@ -20,3 +22,4 @@ api_router.include_router(ExternalInvoices.router, prefix="/external_invoices", 
 api_router.include_router(InternalInvoices.router, prefix="/internal_invoices", tags=["internal_invoices"])
 api_router.include_router(paymentstosupplier.router, prefix="/paymentstosupplier", tags=["paymentstosupplier"])
 api_router.include_router(paymentsfromcustomer.router, prefix="/paymentsfromcustomer", tags=["paymentsfromcustomer"])
+api_router.include_router(reporting.router, prefix="/reporting", tags=["reporting"])

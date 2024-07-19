@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic.networks import EmailStr
 
 from app.api.deps import get_current_active_superuser
-from app.models import Message
+from app.models import Message, ChatbotQuery
 from app.utils import generate_test_email, send_email
 
 router = APIRouter()
@@ -24,3 +24,13 @@ def test_email(email_to: EmailStr) -> Message:
         html_content=email_data.html_content,
     )
     return Message(message="Test email sent")
+
+
+
+from app.api.routes.tools.gpt_chatbot import process_query
+
+
+@router.post("/chatbot")
+def chatbot(query: ChatbotQuery):
+    response = process_query(query.query)
+    return {"response": response}

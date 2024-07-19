@@ -409,6 +409,32 @@ export type ProjectsPublic = {
 
 
 
+export type ReportData = {
+	total_income: number;
+	total_expenses: number;
+	net_profit: number;
+};
+
+
+
+export type ReportRequest = {
+	start_date: string;
+	end_date: string;
+	report_type: string;
+	output_format: string;
+};
+
+
+
+export type ReportResponse = {
+	data: ReportData;
+	start_date: string;
+	end_date: string;
+	report_type: string;
+};
+
+
+
 export type SupplierContactCreate = {
 	contact_name: string;
 	phone_number?: string | null;

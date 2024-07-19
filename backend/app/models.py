@@ -491,3 +491,48 @@ class PaymentFromCustomerPublic(PaymentFromCustomerBase):
 class PaymentFromCustomersPublic(SQLModel):
     data: List[PaymentFromCustomerPublic]
     count: int
+
+
+
+
+
+class EntityPayment(BaseModel):
+    name: str
+    total_payment: float
+    
+
+class ProjectData(BaseModel):
+    project_name: str
+    income: float
+    expenses: float
+    profit: float
+
+class ReportData(BaseModel):
+    total_income: float
+    total_expenses: float
+    net_profit: float
+    total_receivables: float
+    total_payables: float
+    project_data: List[ProjectData]
+    top_customers: List[EntityPayment]
+    top_suppliers: List[EntityPayment]
+
+class ReportRequest(BaseModel):
+    start_date: date
+    end_date: date
+    report_type: str
+    output_format: str
+
+class ReportResponse(BaseModel):
+    data: ReportData
+    start_date: date
+    end_date: date
+    report_type: str
+
+
+
+
+class ChatbotQuery(BaseModel):
+    query: str
+
+

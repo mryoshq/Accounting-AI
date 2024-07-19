@@ -1451,6 +1451,69 @@ export const $ProjectsPublic = {
 	},
 } as const;
 
+export const $ReportData = {
+	properties: {
+		total_income: {
+	type: 'number',
+	isRequired: true,
+},
+		total_expenses: {
+	type: 'number',
+	isRequired: true,
+},
+		net_profit: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ReportRequest = {
+	properties: {
+		start_date: {
+	type: 'string',
+	isRequired: true,
+	format: 'date',
+},
+		end_date: {
+	type: 'string',
+	isRequired: true,
+	format: 'date',
+},
+		report_type: {
+	type: 'string',
+	isRequired: true,
+},
+		output_format: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ReportResponse = {
+	properties: {
+		data: {
+	type: 'ReportData',
+	isRequired: true,
+},
+		start_date: {
+	type: 'string',
+	isRequired: true,
+	format: 'date',
+},
+		end_date: {
+	type: 'string',
+	isRequired: true,
+	format: 'date',
+},
+		report_type: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $SupplierContactCreate = {
 	properties: {
 		contact_name: {

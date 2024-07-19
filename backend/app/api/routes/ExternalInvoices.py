@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from typing import Any, List
 
 from app.api.deps import CurrentUser, SessionDep
-from app.api import gpt_process
+from app.api.routes.tools import gpt_process
 from app.models import ExternalInvoiceCreate, ExternalInvoicePublic, ExternalInvoicesPublic, ExternalInvoiceUpdate
 from app.models import PartPublic, PartsPublic
 from app.models import PaymentToSuppliersPublic

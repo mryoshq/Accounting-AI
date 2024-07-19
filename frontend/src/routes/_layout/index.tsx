@@ -19,7 +19,15 @@ import {
   Alert,
   AlertIcon,
   Button,
-  Flex
+  Flex,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -48,6 +56,8 @@ import {
   PaymentFromCustomerPublic
 } from "../../client";
 import type { UserPublic } from "../../client";
+import ReportingComponent from '../../components/Reporting/ReportingComponent';
+
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
@@ -224,6 +234,7 @@ function Dashboard() {
     );
   }
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
   return (
     <Container maxW="full" p={5}>
       <Box pt={5} pb={10}>
@@ -231,6 +242,7 @@ function Dashboard() {
         <Text fontSize="xl" color={'GrayText'}>
           Welcome, {currentUser?.full_name || currentUser?.email}
         </Text>
+     
       </Box>
 
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} p={7} spacing={6} mb={10} boxShadow='lg' rounded='md'>
@@ -318,7 +330,7 @@ function Dashboard() {
           </>
         )}
       </Box>
-
+      
       <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={10}>
         <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='lg' rounded='md'>
           <Text fontSize="xl" fontWeight="bold" mb={4}>Recent Expenses</Text>
@@ -371,7 +383,31 @@ function Dashboard() {
             </Table>
           )}
         </Box>
-        </SimpleGrid>
+      </SimpleGrid>
+
+
+      <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='lg' rounded='md' mb={10}>
+        <Button onClick={onOpen} colorScheme="blue" mt={4}>
+          Generate Report
+        </Button>
+      </Box>
+
+      <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Generate Report</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <ReportingComponent />
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
     </Container>
   );
 }
