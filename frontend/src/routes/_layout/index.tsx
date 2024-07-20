@@ -28,6 +28,7 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Grid,
 } from "@chakra-ui/react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -45,6 +46,8 @@ import {
   Cell
 } from 'recharts';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+
+import { ChatBox } from '../../components/Common/Chatbox';
 
 import {
   ExternalInvoicesService,
@@ -385,16 +388,24 @@ function Dashboard() {
         </Box>
       </SimpleGrid>
 
-
-      <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='lg' rounded='md' mb={10}>
-        <Button onClick={onOpen} colorScheme="blue" mt={4}>
-          Generate Report
-        </Button>
+      <Flex  mt={4} height="600px">
+      <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={10} width="100%">
+        <Grid templateColumns="1fr 2fr" gap={4} height="100%">
+          <Box>
+            <Button onClick={onOpen} colorScheme="blue" mt={4} width="100%">
+              Generate Report
+            </Button>
+          </Box>
+          <Box>
+            <ChatBox  />
+          </Box>
+        </Grid>
       </Box>
-
+    </Flex>
       <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
+          
           <ModalHeader>Generate Report</ModalHeader>
           <ModalCloseButton />
           <ModalBody>

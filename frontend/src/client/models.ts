@@ -21,6 +21,12 @@ export type Body_login_login_access_token = {
 
 
 
+export type ChatbotQuery = {
+	query: string;
+};
+
+
+
 export type CurrencyType = 'MAD' | 'EUR';
 
 
@@ -97,6 +103,13 @@ export type CustomerUpdate = {
 export type CustomersPublic = {
 	data: Array<CustomerPublic>;
 	count: number;
+};
+
+
+
+export type EntityPayment = {
+	name: string;
+	total_payment: number;
 };
 
 
@@ -385,6 +398,15 @@ export type ProjectCreate = {
 
 
 
+export type ProjectData = {
+	project_name: string;
+	income: number;
+	expenses: number;
+	profit: number;
+};
+
+
+
 export type ProjectPublic = {
 	name: string;
 	description?: string | null;
@@ -413,6 +435,11 @@ export type ReportData = {
 	total_income: number;
 	total_expenses: number;
 	net_profit: number;
+	total_receivables: number;
+	total_payables: number;
+	project_data: Array<ProjectData>;
+	top_customers: Array<EntityPayment>;
+	top_suppliers: Array<EntityPayment>;
 };
 
 

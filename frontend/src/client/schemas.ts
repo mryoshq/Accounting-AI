@@ -66,6 +66,15 @@ export const $Body_login_login_access_token = {
 	},
 } as const;
 
+export const $ChatbotQuery = {
+	properties: {
+		query: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $CurrencyType = {
 	type: 'Enum',
 	enum: ['MAD','EUR',],
@@ -331,6 +340,19 @@ export const $CustomersPublic = {
 	isRequired: true,
 },
 		count: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $EntityPayment = {
+	properties: {
+		name: {
+	type: 'string',
+	isRequired: true,
+},
+		total_payment: {
 	type: 'number',
 	isRequired: true,
 },
@@ -1381,6 +1403,27 @@ export const $ProjectCreate = {
 	},
 } as const;
 
+export const $ProjectData = {
+	properties: {
+		project_name: {
+	type: 'string',
+	isRequired: true,
+},
+		income: {
+	type: 'number',
+	isRequired: true,
+},
+		expenses: {
+	type: 'number',
+	isRequired: true,
+},
+		profit: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $ProjectPublic = {
 	properties: {
 		name: {
@@ -1463,6 +1506,35 @@ export const $ReportData = {
 },
 		net_profit: {
 	type: 'number',
+	isRequired: true,
+},
+		total_receivables: {
+	type: 'number',
+	isRequired: true,
+},
+		total_payables: {
+	type: 'number',
+	isRequired: true,
+},
+		project_data: {
+	type: 'array',
+	contains: {
+		type: 'ProjectData',
+	},
+	isRequired: true,
+},
+		top_customers: {
+	type: 'array',
+	contains: {
+		type: 'EntityPayment',
+	},
+	isRequired: true,
+},
+		top_suppliers: {
+	type: 'array',
+	contains: {
+		type: 'EntityPayment',
+	},
 	isRequired: true,
 },
 	},

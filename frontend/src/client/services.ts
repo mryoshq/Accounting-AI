@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ChatbotQuery,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -369,6 +369,10 @@ export type TDataTestEmail = {
                 emailTo: string
                 
             }
+export type TDataChatbot = {
+                requestBody: ChatbotQuery
+                
+            }
 
 export class UtilsService {
 
@@ -388,6 +392,26 @@ emailTo,
 			query: {
 				email_to: emailTo
 			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Chatbot
+	 * @returns unknown Successful Response
+	 * @throws ApiError
+	 */
+	public static chatbot(data: TDataChatbot): CancelablePromise<unknown> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/utils/chatbot',
+			body: requestBody,
+			mediaType: 'application/json',
 			errors: {
 				422: `Validation Error`,
 			},
@@ -651,10 +675,7 @@ export type TDataCreateSupplierContact = {
                 requestBody: SupplierContactCreate
                 
             }
-export type TDataReadContact = {
-                contactId: number
-                
-            }
+
 export type TDataUpdateSupplierContact = {
                 contactId: number
 requestBody: SupplierContactUpdate
@@ -1037,7 +1058,10 @@ export type TDataCreateCustomerContact = {
                 requestBody: CustomerContactCreate
                 
             }
-
+export type TDataReadContact = {
+                contactId: number
+                
+            }
 export type TDataUpdateCustomerContact = {
                 contactId: number
 requestBody: CustomerContactUpdate
