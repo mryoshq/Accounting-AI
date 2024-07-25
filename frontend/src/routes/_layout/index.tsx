@@ -43,7 +43,9 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  AreaChart,
+  Area,
 } from 'recharts';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
@@ -51,7 +53,9 @@ import { ChatBox } from '../../components/Common/Chatbox';
 
 import {
   ExternalInvoicesService,
+  InternalInvoicesService,
   SuppliersService,
+  CustomersService,
   ProjectsService,
   PaymentstosupplierService,
   PaymentsfromcustomerService,
@@ -60,7 +64,6 @@ import {
 } from "../../client";
 import type { UserPublic } from "../../client";
 import ReportingComponent from '../../components/Reporting/ReportingComponent';
-
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
@@ -87,7 +90,16 @@ const DashboardKPI: React.FC<DashboardKPIProps> = ({ title, metric, trend, isLoa
   </Stat>
 );
 
-const COLORS = ['#00C49F', '#8884D8', '#0088FE', '#FF8042', '#FFBB28'];
+const getStatusColor = (status: string) => {
+  const colorMap: { [key: string]: string } = {
+    'Paid': '#00C49F',
+    'Pending': '#8884D8',
+    'Partial': '#0088FE',
+    'Failed': '#FF8042',
+    'Missing': '#FFBB28'
+  };
+  return colorMap[status] || '#999999'; // default color if status is not found
+};
 
 const PAYMENT_STATUSES = ['Paid', 'Pending', 'Partial', 'Failed', 'Missing'];
 
@@ -101,7 +113,7 @@ interface CustomizedLabelProps {
   percent: number;
 }
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: CustomizedLabelProps) => {
+const PieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: CustomizedLabelProps) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
@@ -117,8 +129,11 @@ interface DashboardData {
   totalInvoices: number;
   totalAmount: number;
   activeSuppliers: number;
-  invoiceProcessingData: Array<{ name: string; value: number }>;
-  topSuppliers: Array<{ name: string; invoiceCount: number }>;
+  processingAccuracy: number;
+  externalPaymentsData: Array<{ name: string; value: number }>;
+  internalPaymentsData: Array<{ name: string; value: number }>;
+  topSuppliers: Array<{ name: string; }>;
+  topCustomers: Array<{ name: string; }>;
   projectFinancialData: Array<{ name: string; expenses: number; income: number }>;
   recentExpenses: PaymentToSupplierPublic[];
   recentIncomes: PaymentFromCustomerPublic[];
@@ -131,15 +146,35 @@ function Dashboard() {
 
   const [selectedProjectIndex, setSelectedProjectIndex] = React.useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [projectReturns, setProjectReturns] = useState<Array<{ project: string, data: Array<{ invoice: string, return: number }> }>>([]);
 
-  const { data: invoices, error: invoicesError } = useQuery({
+
+
+
+  const { data: external_invoices, error: externalInvoicesError, isLoading: externalInvoicesLoading } = useQuery({
     queryKey: ['externalInvoices'],
     queryFn: () => ExternalInvoicesService.readExternalInvoices(),
+    refetchInterval: 600, // Refetch every 60 seconds
   });
+
+  const { data: internal_invoices, error: internalInvoicesError } = useQuery({
+    queryKey: ['internalInvoices'],
+    queryFn: () => InternalInvoicesService.readInternalInvoices(),
+    refetchInterval: 600, // Refetch every 60 seconds
+  });
+
+
+
+  //data
 
   const { data: suppliers, error: suppliersError } = useQuery({
     queryKey: ['suppliers'],
     queryFn: () => SuppliersService.readSuppliers(),
+  });
+
+  const { data: customers, error: customersError } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => CustomersService.readCustomers(),
   });
 
   const { data: projects, error: projectsError } = useQuery({
@@ -161,42 +196,77 @@ function Dashboard() {
     totalInvoices: 0,
     totalAmount: 0,
     activeSuppliers: 0,
-    invoiceProcessingData: [],
+    processingAccuracy: 0,
+    externalPaymentsData: [],
+    internalPaymentsData: [],
     topSuppliers: [],
+    topCustomers: [],
     projectFinancialData: [],
     recentExpenses: [],
     recentIncomes: [],
   });
 
+
+  
   useEffect(() => {
-    if (invoices && suppliers && projects && paymentsToSuppliers && paymentsFromCustomers) {
-      const totalInvoices = invoices.count || 0;
-      const totalAmount = invoices.data.reduce((sum, invoice) => sum + invoice.amount_ttc, 0) || 0;
+    if (external_invoices && internal_invoices && suppliers && customers && projects && paymentsToSuppliers && paymentsFromCustomers) {
+      const totalInvoices = (external_invoices.count || 0) + (internal_invoices.count || 0);
+      const totalAmount = external_invoices.data.reduce((sum, invoice) => sum + (invoice.amount_ttc || 0), 0) +
+                          internal_invoices.data.reduce((sum, invoice) => sum + (invoice.amount_ttc || 0), 0);
       const activeSuppliers = suppliers.count || 0;
 
-      const invoiceProcessingData = PAYMENT_STATUSES.map(status => ({
+
+      const totalPayments = (paymentsToSuppliers.count || 0) + (paymentsFromCustomers.count || 0);
+      const successfulPayments = paymentsToSuppliers.data.filter(p => p.payment_status === 'Paid').length +
+                               paymentsFromCustomers.data.filter(p => p.payment_status === 'Paid').length;
+      const processingAccuracy = totalPayments > 0 ? (successfulPayments / totalPayments) * 100 : 0;
+
+    
+
+      const externalPaymentsData = PAYMENT_STATUSES.map(status => ({
         name: status,
         value: paymentsToSuppliers.data.filter(p => p.payment_status === status).length || 0,
       })).filter(item => item.value > 0);
 
+      const internalPaymentsData = PAYMENT_STATUSES.map(status => ({
+        name: status,
+        value: paymentsFromCustomers.data.filter(p => p.payment_status === status).length || 0,
+      })).filter(item => item.value > 0);
+
+
+      //top suppliers and customers
       const topSuppliers = suppliers.data
         .map(supplier => ({
           name: supplier.name,
-          invoiceCount: invoices.data.filter(invoice => invoice.supplier_id === supplier.id).length || 0,
+          total: external_invoices.data
+            .filter(invoice => invoice.supplier_id === supplier.id)
+            .reduce((sum, invoice) => sum + (invoice.amount_ttc || 0), 0),
         }))
-        .sort((a, b) => b.invoiceCount - a.invoiceCount)
+        .sort((a, b) => b.total - a.total)
         .slice(0, 5);
 
+      const topCustomers = customers.data
+        .map(customer => ({
+          name: customer.name,
+          total: internal_invoices.data
+            .filter(invoice => invoice.customer_id === customer.id)
+            .reduce((sum, invoice) => sum + (invoice.amount_ttc || 0), 0),
+        }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+
+      //project financial data
       const projectFinancialData = projects.data.map(project => ({
         name: project.name,
         expenses: paymentsToSuppliers.data
           .filter(payment => payment.project_id === project.id)
-          .reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0,
+          .reduce((sum, payment) => sum + (payment.amount || 0), 0),
         income: paymentsFromCustomers.data
           .filter(payment => payment.project_id === project.id)
-          .reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0,
+          .reduce((sum, payment) => sum + (payment.amount || 0), 0),
       }));
 
+      //recent expenses and incomes
       const recentExpenses = paymentsToSuppliers.data
         .sort((a, b) => new Date(b.disbursement_date).getTime() - new Date(a.disbursement_date).getTime())
         .slice(0, 5);
@@ -205,30 +275,71 @@ function Dashboard() {
         .sort((a, b) => new Date(b.disbursement_date).getTime() - new Date(a.disbursement_date).getTime())
         .slice(0, 5);
 
+      // Calculate project returns for the area chart
+      const returns = projects.data.map(project => {
+        const projectInvoices = [
+          ...external_invoices.data.filter(inv => inv.project_id === project.id), // External invoices (expenses)
+          ...internal_invoices.data.filter(inv => inv.project_id === project.id) // Internal invoices (income)
+        ].sort((a, b) => new Date(a.invoice_date).getTime() - new Date(b.invoice_date).getTime());
+
+        let cumulativeReturn = 0;
+        const data = projectInvoices.map(invoice => {
+          const amount = invoice.amount_ttc || 0;
+          // Internal invoices are income, external invoices are expenses
+          cumulativeReturn += 'customer_id' in invoice ? amount : -amount;
+          return {
+            invoice: invoice.reference || '',
+            return: cumulativeReturn
+          };
+        });
+
+        return { project: project.name, data };
+      });
+
+        
+
       setDashboardData({
         totalInvoices,
         totalAmount,
         activeSuppliers,
-        invoiceProcessingData,
+        processingAccuracy,
+        externalPaymentsData,
+        internalPaymentsData,
         topSuppliers,
-        projectFinancialData,
+        topCustomers,
+        projectFinancialData, 
         recentExpenses,
         recentIncomes,
       });
 
+      setProjectReturns(returns);
       setDataLoaded(true);
     }
-  }, [invoices, suppliers, projects, paymentsToSuppliers, paymentsFromCustomers]);
+  }, [external_invoices, internal_invoices, suppliers, projects, paymentsToSuppliers, paymentsFromCustomers]);
+
+  const gradientOffset = () => {
+    if (!projectReturns[selectedProjectIndex]) return 0;
+    const data = projectReturns[selectedProjectIndex].data;
+    const dataMax = Math.max(...data.map((i) => i.return));
+    const dataMin = Math.min(...data.map((i) => i.return));
+
+    if (dataMax <= 0) return 0;
+    if (dataMin >= 0) return 1;
+
+    return dataMax / (dataMax - dataMin);
+  };
+
+  const off = gradientOffset();
 
   const handlePreviousProject = () => {
-    setSelectedProjectIndex((prev) => (prev > 0 ? prev - 1 : dashboardData.projectFinancialData.length - 1));
+    setSelectedProjectIndex((prev) => (prev > 0 ? prev - 1 : projectReturns.length - 1));
   };
 
   const handleNextProject = () => {
-    setSelectedProjectIndex((prev) => (prev < dashboardData.projectFinancialData.length - 1 ? prev + 1 : 0));
+    setSelectedProjectIndex((prev) => (prev < projectReturns.length - 1 ? prev + 1 : 0));
   };
 
-  if (invoicesError || suppliersError || projectsError || paymentsToSuppliersError || paymentsFromCustomersError) {
+  if (externalInvoicesError || internalInvoicesError || suppliersError || customersError || projectsError || paymentsToSuppliersError || paymentsFromCustomersError) {
     return (
       <Alert status="error">
         <AlertIcon />
@@ -236,8 +347,9 @@ function Dashboard() {
       </Alert>
     );
   }
-
+  
   const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
     <Container maxW="full" p={5}>
       <Box pt={5} pb={10}>
@@ -245,38 +357,175 @@ function Dashboard() {
         <Text fontSize="xl" color={'GrayText'}>
           Welcome, {currentUser?.full_name || currentUser?.email}
         </Text>
-     
       </Box>
 
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} p={7} spacing={6} mb={10} boxShadow='lg' rounded='md'>
-        <DashboardKPI title="Invoices Processed" metric={dashboardData.totalInvoices} trend="+12% from last month" isLoading={!dataLoaded} />
-        <DashboardKPI title="Total Amount Processed" metric={`MAD ${dashboardData.totalAmount.toLocaleString()}`} trend="+8% from last month" isLoading={!dataLoaded} />
-        <DashboardKPI title="Active Suppliers" metric={dashboardData.activeSuppliers} trend="+3 from last month" isLoading={!dataLoaded} />
-        <DashboardKPI title="Processing Accuracy" metric="98.5%" trend="+0.5% from last month" isLoading={false} />
+        <DashboardKPI 
+          title="Invoices Processed" 
+          metric={dashboardData.totalInvoices} 
+          isLoading={externalInvoicesLoading} 
+        />
+        <DashboardKPI 
+          title="Total Amount Processed" 
+          metric={`MAD ${dashboardData.totalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} 
+          trend={`${((dashboardData.totalAmount / (external_invoices?.data.reduce((sum, inv) => sum + (inv.amount_ttc || 0), 0) || 1) - 1) * 100).toFixed(1)}% from last month`} 
+          isLoading={externalInvoicesLoading} 
+        />
+        <DashboardKPI 
+          title="Active Suppliers" 
+          metric={dashboardData.activeSuppliers} 
+          isLoading={!dataLoaded} 
+        />
+        <DashboardKPI 
+          title="Processing Accuracy" 
+          metric={`${dashboardData.processingAccuracy.toFixed(1)}%`} 
+          trend={`${(dashboardData.processingAccuracy - 98).toFixed(1)}% from last month`} 
+          isLoading={!dataLoaded} 
+        />
       </SimpleGrid>
 
+  
       <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={10}>
         <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='outline' rounded='md'>
-          <Text fontSize="xl" fontWeight="bold" mb={4}>Invoice Processing Status</Text>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>Top Customers by Total Income</Text>
+          {!dataLoaded ? (
+            <Spinner />
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dashboardData.topCustomers}>
+                <Legend width={100} wrapperStyle={{ top: 10, right: 10,  lineHeight: '40px' }} />
+                <XAxis dataKey="name" />
+                <YAxis 
+                  tickFormatter={(value) => `${(value / 1000).toFixed(1)}K`}
+                />
+                <Tooltip 
+                  formatter={(value) => `MAD ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                />
+                <Legend />
+                <Bar 
+                dataKey="total" 
+                fill="#82ca9d" 
+                name="total" 
+                barSize={50}
+                label={{ position: "insideTop", fill: "white" }}
+                />
+                
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Box>
+        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='outline' rounded='md'>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>Incomes Status</Text>
           {!dataLoaded ? (
             <Spinner />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
+                <Legend width={100} wrapperStyle={{ top: 10, right: 10,  lineHeight: '40px' }} />
                 <Pie
-                  data={dashboardData.invoiceProcessingData}
+                  data={dashboardData.internalPaymentsData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={renderCustomizedLabel}
+                  label={PieLabel}
                   outerRadius={100}
-                  fill="#8884d8"
                   dataKey="value"
-                  animationBegin={0}
-                  animationDuration={1000}
                 >
-                  {dashboardData.invoiceProcessingData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {dashboardData.internalPaymentsData.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={getStatusColor(entry.name)} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </Box>
+      </SimpleGrid>
+
+
+
+      <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='lg' rounded='md' mb={10}>
+        <Text fontSize="xl" fontWeight="bold" mb={4}>Project Financial Overview</Text>
+        {!dataLoaded || projectReturns.length === 0 ? (
+          <Spinner />
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart
+                data={projectReturns[selectedProjectIndex].data}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="invoice" 
+                  interval={0} 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={80} 
+                  tick={{fontSize: 10}}
+                />
+                <YAxis 
+                  tickFormatter={(value) => new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short' }).format(value)}
+                />
+                <Tooltip 
+                  formatter={(value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'MAD' }).format(Number(value))}
+                  labelFormatter={(label) => `Invoice: ${label}`}
+                />
+                <defs>
+                  <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset={off} stopColor="#00C49F" stopOpacity={1} />
+                    <stop offset={off} stopColor="#FF8042" stopOpacity={1} />
+                  </linearGradient>
+                </defs>
+                <Area 
+                  type="monotone" 
+                  dataKey="return" 
+                  stroke="#000" 
+                  fill="url(#splitColor)" 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+            <Flex justifyContent="center" alignItems="center" mt={4}>
+              <Button onClick={handlePreviousProject} mr={2} bg={'transparent'}>
+                <ChevronLeftIcon />
+              </Button>
+              <Text fontWeight="bold">{projectReturns[selectedProjectIndex]?.project}</Text>
+              <Button onClick={handleNextProject} ml={2} bg={'transparent'}>
+                <ChevronRightIcon />
+              </Button>
+            </Flex>
+          </>
+        )}
+      </Box>
+
+
+     
+
+
+
+      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={10}>
+        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='outline' rounded='md'>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>Expenses Status</Text>
+          {!dataLoaded ? (
+            <Spinner />
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Legend width={100} wrapperStyle={{ top: 10, right: 10,  lineHeight: '40px' }} />
+                <Pie
+                  data={dashboardData.externalPaymentsData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={PieLabel}
+                  outerRadius={100}
+                  dataKey="value"
+                >
+                  {dashboardData.externalPaymentsData.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={getStatusColor(entry.name)} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -286,54 +535,34 @@ function Dashboard() {
           )}
         </Box>
         <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='outline' rounded='md'>
-          <Text fontSize="xl" fontWeight="bold" mb={4}>Top Suppliers by Invoice Count</Text>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>Top Suppliers by Total Expenditure</Text>
           {!dataLoaded ? (
             <Spinner />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={dashboardData.topSuppliers}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <Legend width={100} wrapperStyle={{ top: 10, right: 10,  lineHeight: '40px' }} />
                 <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <YAxis 
+                  tickFormatter={(value) => `${(value / 1000).toFixed(1)}K`}
+                />
+                <Tooltip 
+                  formatter={(value) => `MAD ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                />
                 <Legend />
-                <Bar dataKey="invoiceCount" fill="#FF8042" animationBegin={0} animationDuration={1000} />
+                <Bar 
+                dataKey="total" 
+                fill="#FF8042" 
+                name="total" 
+                barSize={50} 
+                label={{ position: "insideTop", fill: "white" }}/>
               </BarChart>
             </ResponsiveContainer>
           )}
         </Box>
       </SimpleGrid>
 
-      <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='lg' rounded='md' mb={10}>
-        <Text fontSize="xl" fontWeight="bold" mb={4}>Project Financial Overview</Text>
-        {!dataLoaded ? (
-          <Spinner />
-        ) : (
-          <>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={[dashboardData.projectFinancialData[selectedProjectIndex]]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="expenses" fill="#8884d8" animationBegin={0} animationDuration={1000} />
-                <Bar dataKey="income" fill="#00C49F" animationBegin={0} animationDuration={1000} />
-              </BarChart>
-            </ResponsiveContainer>
-            <Flex justifyContent="center" alignItems="center" mt={4}>
-              <Button onClick={handlePreviousProject} mr={2} bg={'transparent'}>
-                <ChevronLeftIcon />
-              </Button>
-              <Text fontWeight="bold">{dashboardData.projectFinancialData[selectedProjectIndex]?.name}</Text>
-              <Button onClick={handleNextProject} ml={2} bg={'transparent'}>
-                <ChevronRightIcon />
-              </Button>
-            </Flex>
-          </>
-        )}
-      </Box>
-      
+    
       <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={10}>
         <Box bg={bgColor} p={5} borderRadius="lg" boxShadow='lg' rounded='md'>
           <Text fontSize="xl" fontWeight="bold" mb={4}>Recent Expenses</Text>
@@ -353,7 +582,12 @@ function Dashboard() {
                   <Tr key={expense.id}>
                     <Td>{expense.disbursement_date}</Td>
                     <Td>{`MAD ${expense.amount?.toLocaleString()}`}</Td>
-                    <Td>{expense.payment_status}</Td>
+                    <Td>
+                    <Box as="span" px={2} py={1} borderRadius="md" bg={getStatusColor(expense.payment_status)}>
+                      {expense.payment_status}
+                    </Box>
+                  </Td>
+
                   </Tr>
                 ))}
               </Tbody>
@@ -375,11 +609,15 @@ function Dashboard() {
                 </Tr>
               </Thead>
               <Tbody>
-                {dashboardData.recentIncomes.map((income) => (
+              {dashboardData.recentIncomes.map((income) => (
                   <Tr key={income.id}>
                     <Td>{income.disbursement_date}</Td>
                     <Td>{`MAD ${income.amount?.toLocaleString()}`}</Td>
-                    <Td>{income.payment_status}</Td>
+                    <Td>
+                      <Box as="span" px={2} py={1} borderRadius="md" bg={getStatusColor(income.payment_status)}>
+                        {income.payment_status}
+                      </Box>
+                    </Td>
                   </Tr>
                 ))}
               </Tbody>
@@ -388,24 +626,25 @@ function Dashboard() {
         </Box>
       </SimpleGrid>
 
-      <Flex  mt={4} height="600px">
-      <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={10} width="100%">
-        <Grid templateColumns="1fr 2fr" gap={4} height="100%">
-          <Box>
-            <Button onClick={onOpen} colorScheme="blue" mt={4} width="100%">
-              Generate Report
-            </Button>
-          </Box>
-          <Box>
-            <ChatBox  />
-          </Box>
-        </Grid>
-      </Box>
-    </Flex>
+
+      <Flex mt={4} height="600px">
+        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={10} width="100%">
+          <Grid templateColumns="1fr 2fr" gap={4} height="100%">
+            <Box>
+              <Button onClick={onOpen} colorScheme="blue" mt={4} width="100%">
+                Generate Report
+              </Button>
+            </Box>
+            <Box>
+              <ChatBox />
+            </Box>
+          </Grid>
+        </Box>
+      </Flex>
+
       <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          
           <ModalHeader>Generate Report</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
@@ -418,9 +657,12 @@ function Dashboard() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
     </Container>
   );
 }
 
 export default Dashboard;
+
+
+
+

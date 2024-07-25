@@ -269,7 +269,7 @@ function PaymentsFromCustomers() {
   return (
     <Container maxW="full">
       <Flex  alignItems="center" mb={4} mt={7}>
-        <Heading size="lg" mr={20}>Payments To Customers Management</Heading>
+        <Heading size="lg" mr={20}>Payments From Customers Management</Heading>
         <Navbar type="PaymentFromCustomer" />
       </Flex>
       <PaymentsFromCustomersTable
