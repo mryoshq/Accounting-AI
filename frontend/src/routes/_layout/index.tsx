@@ -355,7 +355,7 @@ function Dashboard() {
       <Box pt={5} pb={10}>
         <Text fontSize="3xl" fontWeight="bold">Dashboard</Text>
         <Text fontSize="xl" color={'GrayText'}>
-          Welcome, {currentUser?.full_name || currentUser?.email}
+          Welcome dear, {currentUser?.full_name || currentUser?.email}
         </Text>
       </Box>
 
