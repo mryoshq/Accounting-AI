@@ -32,6 +32,7 @@ jobs:
     - name: Cleanup Docker environment
       run: |
         docker system prune -af
+        
     - name: Check current user
       run: |
         whoami
