@@ -51,10 +51,6 @@ jobs:
           }
     
 
-    - name: Check port 80 usage
-      run: |
-        netstat -ano | findstr :80
-
     - name: Stop and remove existing containers
       env:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
