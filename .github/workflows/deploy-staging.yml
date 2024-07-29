@@ -67,10 +67,14 @@ jobs:
         docker-compose version
         docker network ls
 
-    - name: Generate self-signed certificate for staging
+    - name: Generate self-signed certificate and Traefik configuration for staging
       run: |
         mkdir -p traefik-stage-certificates
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/CN=${DOMAIN}"
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=${DOMAIN}"
+        echo "tls:
+          certificates:
+            - certFile: /certificates/domain.crt
+              keyFile: /certificates/domain.key" > traefik-stage-certificates/tls.yml
 
     - name: Create traefik-public network
       run: |

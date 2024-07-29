@@ -22,12 +22,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-stage-certificates:/certificates
     command:
-      - --providers.docker
+      - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.http.address=:80
       - --entrypoints.https.address=:443
-      - --certificatesresolvers.stagecert.file.directory=/certificates
-      - --entrypoints.https.http.tls.certresolver=stagecert
+      - --providers.file.directory=/certificates
+      - --providers.file.watch=true
+      - --entrypoints.https.http.tls.certificates.directory=/certificates
       - --accesslog
       - --log
       - --api
