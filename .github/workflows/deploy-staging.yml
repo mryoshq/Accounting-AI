@@ -12,7 +12,7 @@ jobs:
       - staging
     env:
       ENVIRONMENT: staging
-      DOMAIN: ${{ secrets.DOMAIN_STAGING }}
+      DOMAIN: ${{ secrets.DOMAIN }}
       USERNAME: ${{ secrets.TRAEFIK_USERNAME }}
       PASSWORD: ${{ secrets.TRAEFIK_PASSWORD }}
       HASHED_PASSWORD: ${{ secrets.HASHED_PASSWORD }}
@@ -108,7 +108,7 @@ jobs:
     - name: Build and deploy
       env:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
-        DOMAIN: ${{ secrets.DOMAIN_STAGING }}
+        DOMAIN: ${{ secrets.DOMAIN }}
       run: |
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME build --no-cache
         docker compose -f docker-compose.traefik-stage.yml -f docker-compose.yml --project-name $env:STACK_NAME up -d --remove-orphans
