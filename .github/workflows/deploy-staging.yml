@@ -28,11 +28,10 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
-
     - name: Cleanup Docker environment
       run: |
-        docker system prune -af
-        
+        docker image prune -af
+        docker container prune -f
     - name: Check current user
       run: |
         whoami
@@ -89,8 +88,7 @@ jobs:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
       run: |
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME build --no-cache
-        docker compose -f docker-compose.traefik.yml --project-name $env:STACK_NAME up -d --remove-orphans
-        docker compose -f docker-compose.yml --project-name $env:STACK_NAME up -d --remove-orphans
+        docker compose -f docker-compose.traefik.yml docker-compose.yml --project-name $env:STACK_NAME up -d --remove-orphans
 
     - name: Check running containers
       run: docker ps
