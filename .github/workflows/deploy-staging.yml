@@ -32,23 +32,7 @@ jobs:
     
 
 
-    - name: Debug information
-      run: |
-        docker version
-        docker info
-        docker network ls
-        docker volume ls
-        docker ps -a
-
-    - name: Check Docker daemon
-      run: |
-        docker info
-        if ($LASTEXITCODE -ne 0) {
-          Write-Error "Docker daemon is not responding. Attempting to restart..."
-          Restart-Service docker
-          Start-Sleep -s 10
-          docker info
-          }
+    
     
 
     - name: Stop and remove existing containers
