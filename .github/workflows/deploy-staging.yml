@@ -88,7 +88,7 @@ jobs:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
       run: |
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME build --no-cache
-        docker compose -f docker-compose.traefik.yml docker-compose.yml --project-name $env:STACK_NAME up -d --remove-orphans
+        docker compose -f docker-compose.traefik.yml -f docker-compose.yml --project-name $env:STACK_NAME up -d --remove-orphans
 
     - name: Check running containers
       run: docker ps
