@@ -33,9 +33,9 @@ services:
       - --providers.docker.exposedbydefault=false
       - --entrypoints.http.address=:80
       - --entrypoints.https.address=:443
-      - --certificatesresolvers.le.acme.email=${EMAIL}
-      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
-      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --providers.file.directory=/certificates
+      - --providers.file.watch=true
+      - --entrypoints.https.http.tls.certificates.directory=/certificates
       - --accesslog
       - --log
       - --api
