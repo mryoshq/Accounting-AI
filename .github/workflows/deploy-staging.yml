@@ -61,20 +61,33 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Check Docker status
-      run: |
-        docker info
-        docker-compose version
-        docker network ls
+    #- name: Check Docker status
+    #  run: |
+    #    docker info
+    #    docker-compose version
+    #    docker network ls
 
     - name: Generate self-signed certificate and Traefik configuration for staging
       run: |
         mkdir -p traefik-stage-certificates
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=${DOMAIN}"
-        echo "tls:
+        $domain = "${{ env.DOMAIN }}"
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=$domain"
+        Set-Content -Path traefik-stage-certificates/tls.yml -Value @"
+        tls:
           certificates:
             - certFile: /certificates/domain.crt
-              keyFile: /certificates/domain.key" > traefik-stage-certificates/tls.yml
+              keyFile: /certificates/domain.key
+        "@
+
+    - name: Verify certificate generation
+      run: |
+        if (Test-Path traefik-stage-certificates/domain.crt) {
+          Write-Host "Certificate generated successfully"
+          Get-Content traefik-stage-certificates/domain.crt | Select-Object -First 5
+        } else {
+          Write-Error "Certificate generation failed"
+          exit 1
+        }
 
     - name: Create traefik-public network
       run: |
@@ -95,13 +108,10 @@ jobs:
     - name: Build and deploy
       env:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
+        DOMAIN: ${{ secrets.DOMAIN_STAGING }}
       run: |
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME build --no-cache
         docker compose -f docker-compose.traefik-stage.yml -f docker-compose.yml --project-name $env:STACK_NAME up -d --remove-orphans
 
     - name: Check running containers
       run: docker ps
-
-
-   
-      
