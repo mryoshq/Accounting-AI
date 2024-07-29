@@ -28,6 +28,19 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
+
+    - name: Stop and remove existing containers
+      env:
+        STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.traefik-stage.yml --project-name $env:STACK_NAME down -v
+        $containersToRemove = docker ps -aq --filter name=$env:STACK_NAME
+        if ($containersToRemove) {
+          docker rm -f $containersToRemove
+        } else {
+          Write-Host "No containers to remove."
+        }
+      continue-on-error: true
     - name: Cleanup Docker environment
       run: |
         docker image prune -af
@@ -96,23 +109,17 @@ jobs:
         } else {
           Write-Host "traefik-public network already exists"
         }
-    - name: List directory contents
-      run: |
-        pwd
-        dir
+    #- name: List directory contents
+      #run: |
+       # pwd
+        #dir
 
     - name: Set up Traefik environment variables
       run: |
         echo "HASHED_PASSWORD=$env:HASHED_PASSWORD" >> $env:GITHUB_ENV
 
 
-    - name: Stop and remove existing containers
-      env:
-        STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.traefik-stage.yml --project-name $env:STACK_NAME down -v
-        docker rm -f $(docker ps -aq --filter name=$env:STACK_NAME) 2>$null
-      continue-on-error: true
+    
 
     - name: Build and deploy
       env:
