@@ -37,11 +37,6 @@ jobs:
         whoami
         echo "Current user: $env:USERNAME"
 
-    - name: Generate self-signed certificate for staging
-      run: |
-        mkdir -p traefik-stage-certificates
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/CN=${DOMAIN}"
-
     - name: Add directory to Git safe directories
       run: |
         git config --global --add safe.directory C:/actions-runner/_work/accounting/accounting
@@ -71,6 +66,11 @@ jobs:
         docker info
         docker-compose version
         docker network ls
+
+    - name: Generate self-signed certificate for staging
+      run: |
+        mkdir -p traefik-stage-certificates
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/CN=${DOMAIN}"
 
     - name: Create traefik-public network
       run: |
