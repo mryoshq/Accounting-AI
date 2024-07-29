@@ -7,7 +7,7 @@ services:
     environment:
       - USERNAME=${USERNAME}
       - HASHED_PASSWORD=${HASHED_PASSWORD}
-      - DOMAIN=${DOMAIN}
+      - DOMAIN=${DOMAIN_STAGING}
       - EMAIL=${EMAIL}
     restart: always
     labels:

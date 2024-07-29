@@ -28,10 +28,10 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
-    - name: Cleanup Docker environment
-      run: |
-        docker image prune -af
-        docker container prune -f
+    #- name: Cleanup Docker environment
+    #  run: |
+    #    docker image prune -af
+    #    docker container prune -f
     - name: Check current user
       run: |
         whoami
