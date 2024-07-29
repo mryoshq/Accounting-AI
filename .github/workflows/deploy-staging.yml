@@ -49,10 +49,7 @@ jobs:
           Start-Sleep -s 10
           docker info
           }
-    - name: Restart Docker daemon
-      run: |
-        Restart-Service docker
-        Start-Sleep -s 10
+    
 
     - name: Check port 80 usage
       run: |
