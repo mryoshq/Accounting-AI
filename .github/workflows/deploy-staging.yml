@@ -51,6 +51,7 @@ jobs:
       run: |
         docker image prune -af
         docker container prune -f
+        docker system prune -af --volumes
     - name: Check current user
       run: |
         whoami
