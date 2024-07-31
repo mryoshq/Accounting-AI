@@ -39,7 +39,7 @@ jobs:
       env:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
       run: |
-        docker compose -f docker-compose.yml -f docker-compose.traefik-stage.yml --project-name $env:STACK_NAME down --remove-orphans
+        docker compose -f docker-compose.yml -f docker-compose.traefik-stage.yml --project-name $env:STACK_NAME down -v --remove-orphans
         $containersToRemove = docker ps -aq --filter name=$env:STACK_NAME
         if ($containersToRemove) {
           docker rm -f $containersToRemove
