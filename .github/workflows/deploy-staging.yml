@@ -108,7 +108,6 @@ jobs:
         DOMAIN: ${{ secrets.DOMAIN }}
       run: |
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME build --no-cache
-        docker compose -f docker-compose.traefik.yml -f docker-compose.yml --project-name $env:STACK_NAME config
         docker compose -f docker-compose.traefik.yml -f docker-compose.yml --project-name $env:STACK_NAME up -d  --force-recreate
       continue-on-error: true
 
