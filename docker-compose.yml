@@ -1,5 +1,6 @@
 services:
   db:
+    container_name: db
     image: postgres:12
     restart: always
     volumes:
@@ -18,6 +19,7 @@ services:
       retries: 5
 
   adminer:
+    container_name: adminer
     image: adminer
     restart: always
     networks:
@@ -41,6 +43,7 @@ services:
       - traefik.http.services.${STACK_NAME?Variable not set}-adminer.loadbalancer.server.port=8080
 
   backend:
+    container_name: backend
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
     networks:
@@ -93,6 +96,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.middlewares=${STACK_NAME?Variable not set}-www-redirect
 
   frontend:
+    container_name: frontend
     image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
     restart: always
     networks:
@@ -131,6 +135,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
   
   backup:
+    container_name: backup
     image: postgres:12
     networks:
       - default

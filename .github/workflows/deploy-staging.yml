@@ -62,19 +62,19 @@ jobs:
         git config --global --add safe.directory C:/actions-runner/_work/accounting/accounting
         git config --global --list
 
-    - name: Check directory ownership
-      run: |
-        icacls C:/actions-runner/_work/accounting/accounting
+   # - name: Check directory ownership
+    #  run: |
+     #   icacls C:/actions-runner/_work/accounting/accounting
 
-    - name: Change directory ownership
-      run: |
-        takeown /F C:/actions-runner/_work/accounting/accounting /R /D Y
-        icacls C:/actions-runner/_work/accounting/accounting /grant "githubActionsRunner:(OI)(CI)F" /T
-        icacls C:/actions-runner/_work/accounting/accounting
+ #   - name: Change directory ownership
+  #    run: |
+   #     takeown /F C:/actions-runner/_work/accounting/accounting /R /D Y
+    #    icacls C:/actions-runner/_work/accounting/accounting /grant "githubActionsRunner:(OI)(CI)F" /T
+     #   icacls C:/actions-runner/_work/accounting/accounting
 
-    - name: Verify Git configuration
-      run: |
-        git config --list --show-origin
+    #- name: Verify Git configuration
+     # run: |
+      #  git config --list --show-origin
 
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -134,8 +134,7 @@ jobs:
         DOMAIN: ${{ secrets.DOMAIN }}
       run: |
         docker compose -f docker-compose.yml --project-name $env:STACK_NAME build --no-cache
-        docker compose -f docker-compose.traefik-stage.yml up -d 
-        docker compose -f docker-compose.yml --project-name $env:STACK_NAME up -d  --force-recreate
+        docker compose -f docker-compose.traefik-stage.yml -f docker-compose.yml --project-name $env:STACK_NAME up -d  --force-recreate
 
     - name: Check running containers
       run: docker ps
