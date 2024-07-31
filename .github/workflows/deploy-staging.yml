@@ -34,7 +34,10 @@ jobs:
 
     
     
-
+    - name: Prepare Traefik certificates directory
+      run: |
+        mkdir -p traefik-stage-certificates
+        
     - name: Stop and remove existing containers
       env:
         STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
