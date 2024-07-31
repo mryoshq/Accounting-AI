@@ -141,13 +141,13 @@ jobs:
       
     - name: Verify Traefik configuration
       run: |
-        docker exec ${{ secrets.STACK_NAME_STAGING }}-traefik traefik version
-        docker exec ${{ secrets.STACK_NAME_STAGING }}-traefik traefik healthcheck
+        docker exec traefik traefik version
+        docker exec traefik traefik healthcheck
       continue-on-error: true
 
     - name: Check Traefik logs if deployment failed
       if: failure()
       run: |
-        docker logs ${{ secrets.STACK_NAME_STAGING }}-traefik
-        docker inspect ${{ secrets.STACK_NAME_STAGING }}-traefik
-        docker exec ${{ secrets.STACK_NAME_STAGING }}-traefik ls -la /certificates
+        docker logs traefik
+        docker inspect traefik
+        docker exec traefik ls -la /certificates
