@@ -14,7 +14,6 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
-      - traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080
       - traefik.http.routers.traefik-dashboard-http.entrypoints=http
       - traefik.http.routers.traefik-dashboard-http.rule=Host(`traefik.${DOMAIN}`)
       - traefik.http.routers.traefik-dashboard-https.entrypoints=https
@@ -28,23 +27,20 @@ services:
       - traefik.http.routers.traefik-dashboard-https.middlewares=admin-auth
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik-stage-certificates:/certificates
+      - ./traefik-stage-certificates:/certificates
     command:
-      - --providers.docker
+      - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.http.address=:80
       - --entrypoints.https.address=:443
-      - --providers.file.directory=/certificates
-      - --providers.file.watch=true
-      - --entrypoints.https.http.tls.certificates.directory=/certificates
-      - --accesslog
-      - --log
-      - --api
+      - --entrypoints.https.http.tls.certresolver=default
+      - --certificatesresolvers.default.file.directory=/certificates
+      - --accesslog=true
+      - --log=true
+      - --api.insecure=true
+      - --api.dashboard=true
     networks:
       - traefik-public
-
-volumes:
-  traefik-stage-certificates:
 
 networks:
   traefik-public:
