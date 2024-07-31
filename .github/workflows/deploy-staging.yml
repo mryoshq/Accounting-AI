@@ -86,31 +86,31 @@ jobs:
     #    docker-compose version
     #    docker network ls
 
-    - name: Generate self-signed certificate and Traefik configuration for staging
-      run: |
-        if (-not (Test-Path traefik-stage-certificates/domain.crt)) {
-          mkdir -p traefik-stage-certificates
-          $domain = "${{ env.DOMAIN }}"
-          openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=$domain"
-          Set-Content -Path traefik-stage-certificates/tls.yml -Value @"
-        tls:
-          certificates:
-            - certFile: /certificates/domain.crt
-              keyFile: /certificates/domain.key
-        "@
-        } else {
-          Write-Host "Certificates already exist. Skipping generation."
-        }
+    # - name: Generate self-signed certificate and Traefik configuration for staging
+    #   run: |
+    #     if (-not (Test-Path traefik-stage-certificates/domain.crt)) {
+    #       mkdir -p traefik-stage-certificates
+    #       $domain = "${{ env.DOMAIN }}"
+    #       openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout traefik-stage-certificates/domain.key -out traefik-stage-certificates/domain.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=$domain"
+    #       Set-Content -Path traefik-stage-certificates/tls.yml -Value @"
+    #     tls:
+    #       certificates:
+    #         - certFile: /certificates/domain.crt
+    #           keyFile: /certificates/domain.key
+    #     "@
+    #     } else {
+    #       Write-Host "Certificates already exist. Skipping generation."
+    #     }
 
-    - name: Verify certificate generation
-      run: |
-        if (Test-Path traefik-stage-certificates/domain.crt) {
-          Write-Host "Certificate generated successfully"
-          Get-Content traefik-stage-certificates/domain.crt | Select-Object -First 5
-        } else {
-          Write-Error "Certificate generation failed"
-          exit 1
-        }
+    # - name: Verify certificate generation
+    #   run: |
+    #     if (Test-Path traefik-stage-certificates/domain.crt) {
+    #       Write-Host "Certificate generated successfully"
+    #       Get-Content traefik-stage-certificates/domain.crt | Select-Object -First 5
+    #     } else {
+    #       Write-Error "Certificate generation failed"
+    #       exit 1
+    #     }
 
     - name: Create traefik-public network
       run: |
