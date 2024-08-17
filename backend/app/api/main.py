@@ -1,4 +1,4 @@
-from app.api.routes.tools import utils
+from app.api.routes import utils
 from fastapi import APIRouter
 
 from app.api.routes import login, users

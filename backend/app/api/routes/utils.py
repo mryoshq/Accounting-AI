@@ -7,6 +7,7 @@ from app.utils import generate_test_email, send_email
 
 router = APIRouter()
 
+# -------------------------- 
 
 @router.post(
     "/test-email/",
@@ -25,12 +26,20 @@ def test_email(email_to: EmailStr) -> Message:
     )
     return Message(message="Test email sent")
 
+# -------------------------- 
 
+from app.api.routes.tools.gpt_chatbot_planner import process_query as process_query_planner
 
-from app.api.routes.tools.gpt_chatbot import process_query
+@router.post("/chatbot_planner")
+def chatbot_planner(query: ChatbotQuery):
+    response = process_query_planner(query.query)
+    return {"response": response}
 
+# ---
 
-@router.post("/chatbot")
-def chatbot(query: ChatbotQuery):
-    response = process_query(query.query)
+from app.api.routes.tools.gpt_chatbot_chat import process_query as process_query_chat
+
+@router.post("/chatbot_chat")
+def chatbot_chat(query: ChatbotQuery):
+    response = process_query_chat(query.query)
     return {"response": response}

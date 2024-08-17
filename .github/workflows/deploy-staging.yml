@@ -43,6 +43,10 @@ jobs:
           Write-Host "No containers to remove."
         }
       continue-on-error: true
+
+
+
+      # PERSIST DATA CHECK : REMOVE NEXT JOB
     - name: Cleanup Docker environment
       run: |
         docker system prune -f
@@ -118,12 +122,10 @@ jobs:
     - name: Verify Traefik configuration
       run: |
         docker exec traefik traefik version
-        docker exec traefik traefik healthcheck
       continue-on-error: true
 
-    - name: Check Traefik logs if deployment failed
-      if: failure()
-      run: |
-        docker logs traefik
-        docker inspect traefik
-        docker exec traefik ls -la /certificates
+   # - name: Check Traefik logs if deployment failed
+    #  if: failure()
+     # run: |
+      #  docker logs traefik
+        

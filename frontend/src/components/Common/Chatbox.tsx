@@ -9,7 +9,7 @@ import {
   Icon,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { FaUser, FaRobot } from 'react-icons/fa';
+import { FaRegUserCircle, FaRobot, FaTrash } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { UtilsService, ChatbotQuery } from '../../client'; // Adjust the import path as needed
 
@@ -18,9 +18,13 @@ interface Message {
   isUser: boolean;
 }
 
+interface ChatBoxProps {
+  mode: 'planner' | 'chat';
+}
+
 const TypingIndicator: React.FC = () => (
   <HStack alignSelf="flex-start">
-    <Icon as={FaRobot} boxSize={6} color="green.500" />
+    <Icon as={FaRobot} boxSize={7} color="green.500" />
     <HStack spacing={1}>
       {[0, 1, 2].map((dot) => (
         <motion.div
@@ -41,7 +45,35 @@ const TypingIndicator: React.FC = () => (
   </HStack>
 );
 
-export const ChatBox: React.FC = () => {
+const MessageContent: React.FC<{ text: string }> = ({ text }) => {
+  const lines = text.split('\n');
+  return (
+    <VStack align="start" spacing={1}>
+      {lines.map((line: string, index: number) => {
+        if (line.match(/^\d+\./)) {
+          // This is a numbered item
+          return (
+            <Text key={index} fontWeight="bold">
+              {line}
+            </Text>
+          );
+        } else if (line.trim().startsWith('-')) {
+          // This is a bullet point
+          return (
+            <Text key={index} pl={4}>
+              {line}
+            </Text>
+          );
+        } else {
+          // This is a regular line
+          return <Text key={index}>{line}</Text>;
+        }
+      })}
+    </VStack>
+  );
+};
+
+export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +81,7 @@ export const ChatBox: React.FC = () => {
   const bgColor = useColorModeValue('gray.100', 'gray.700');
   const userBgColor = useColorModeValue('blue.100', 'blue.700');
   const botBgColor = useColorModeValue('green.100', 'green.700');
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,7 +100,11 @@ export const ChatBox: React.FC = () => {
 
     const chatbotQuery: ChatbotQuery = { query: input };
 
-    UtilsService.chatbot({ requestBody: chatbotQuery })
+    const chatbotService = mode === 'planner' ? UtilsService.chatbot_planner : UtilsService.chatbot_chat;
+
+    abortControllerRef.current = new AbortController();
+
+    chatbotService({ requestBody: chatbotQuery })
       .then((response) => {
         let botResponse: string;
         if (typeof response === 'object' && response !== null && 'response' in response) {
@@ -81,20 +118,33 @@ export const ChatBox: React.FC = () => {
         setMessages(prev => [...prev, botMessage]);
       })
       .catch((error) => {
-        console.error('Error:', error);
-        const errorMessage: Message = { text: 'Sorry, an error occurred.', isUser: false };
-        setMessages(prev => [...prev, errorMessage]);
+        if (error.name === 'AbortError') {
+          console.log('Request was aborted');
+        } else {
+          console.error('Error:', error);
+          const errorMessage: Message = { text: 'Sorry, an error occurred.', isUser: false };
+          setMessages(prev => [...prev, errorMessage]);
+        }
       })
       .finally(() => {
         setIsLoading(false);
+        abortControllerRef.current = null;
       });
+  };
+
+  const handleReset = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setMessages([]);
+    setInput('');
+    setIsLoading(false);
   };
 
   return (
     <Box 
       w="100%" 
-      maxW="500px" 
-      h="500px" 
+      h="850px" 
       borderWidth="1px" 
       borderRadius="lg" 
       overflow="hidden"
@@ -102,29 +152,40 @@ export const ChatBox: React.FC = () => {
       flexDirection="column"
     >
       <Box flex="1" overflowY="auto" p={4} bg={bgColor}>
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" spacing={4} width="100%">
           {messages.map((message, index) => (
-            <HStack key={index} alignSelf={message.isUser ? 'flex-end' : 'flex-start'}>
-              <Icon 
-                as={message.isUser ? FaUser : FaRobot} 
-                boxSize={6} 
-                color={message.isUser ? 'blue.500' : 'green.500'}
-              />
+            <HStack key={index} justifyContent={message.isUser ? 'flex-end' : 'flex-start'} alignItems="flex-start" width="100%">
+              {!message.isUser && (
+                <Icon 
+                  as={FaRobot} 
+                  boxSize={7} 
+                  color="green.500"
+                  mt={3}
+                />
+              )}
               <Box 
                 bg={message.isUser ? userBgColor : botBgColor} 
-                p={2} 
+                p={4} 
                 borderRadius="lg"
                 maxW="70%"
               >
-                <Text>{message.text}</Text>
+                <MessageContent text={message.text} />
               </Box>
+              {message.isUser && (
+                <Icon 
+                  as={FaRegUserCircle} 
+                  boxSize={7} 
+                  color="blue.500"
+                  mt={3}
+                />
+              )}
             </HStack>
           ))}
           {isLoading && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </VStack>
       </Box>
-      <Box p={4} borderTopWidth="1px">
+      <Box p={4} borderTopWidth="1px" bg={useColorModeValue('white', 'gray.800')}>
         <form onSubmit={handleSubmit}>
           <HStack>
             <Input 
@@ -132,9 +193,19 @@ export const ChatBox: React.FC = () => {
               onChange={(e) => setInput(e.target.value)} 
               placeholder="Type a message..."
               disabled={isLoading}
+              size="lg"
             />
-            <Button type="submit" colorScheme="blue" isLoading={isLoading}>
+            <Button type="submit" colorScheme="blue" isLoading={isLoading} size="lg">
               Send
+            </Button>
+            <Button 
+              onClick={handleReset} 
+              variant="ghost"
+              leftIcon={<Icon as={FaTrash} />}
+              isDisabled={isLoading || messages.length === 0}
+              size="lg"
+            >
+              Reset
             </Button>
           </HStack>
         </form>

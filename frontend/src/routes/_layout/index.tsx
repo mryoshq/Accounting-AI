@@ -29,6 +29,7 @@ import {
   ModalBody,
   ModalCloseButton,
   Grid,
+  Stack,
 } from "@chakra-ui/react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -154,13 +155,13 @@ function Dashboard() {
   const { data: external_invoices, error: externalInvoicesError, isLoading: externalInvoicesLoading } = useQuery({
     queryKey: ['externalInvoices'],
     queryFn: () => ExternalInvoicesService.readExternalInvoices(),
-    refetchInterval: 600, // Refetch every 60 seconds
+    refetchInterval: 60000, // Refetch every 60 seconds
   });
 
   const { data: internal_invoices, error: internalInvoicesError } = useQuery({
     queryKey: ['internalInvoices'],
     queryFn: () => InternalInvoicesService.readInternalInvoices(),
-    refetchInterval: 600, // Refetch every 60 seconds
+    refetchInterval: 60000, // Refetch every 60 seconds
   });
 
 
@@ -627,20 +628,29 @@ function Dashboard() {
       </SimpleGrid>
 
 
-      <Flex mt={4} height="600px">
-        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={10} width="100%">
-          <Grid templateColumns="1fr 2fr" gap={4} height="100%">
+      <Flex mt={4} height="1000px" direction="column" alignItems="center">
+        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={4} width="100%">
+          <Stack spacing={4} height="100%">
             <Box>
-              <Button onClick={onOpen} colorScheme="blue" mt={4} width="100%">
-                Generate Report
-              </Button>
+              <text>planner tools</text>
+              <ChatBox mode="planner" />
             </Box>
+          </Stack>
+        </Box>
+
+        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={4} width="100%">
+          <Stack spacing={4} height="100%">
             <Box>
-              <ChatBox />
+              <text>chat with function calling</text>
+              <ChatBox mode="chat" />
             </Box>
-          </Grid>
+          </Stack>
         </Box>
       </Flex>
+
+
+      
+      
 
       <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />

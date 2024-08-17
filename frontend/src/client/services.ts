@@ -374,6 +374,7 @@ export type TDataChatbot = {
                 
             }
 
+
 export class UtilsService {
 
 	/**
@@ -399,24 +400,42 @@ emailTo,
 	}
 
 	/**
-	 * Chatbot
+	 * Chatbot_planner
 	 * @returns unknown Successful Response
 	 * @throws ApiError
 	 */
-	public static chatbot(data: TDataChatbot): CancelablePromise<unknown> {
-		const {
-requestBody,
-} = data;
+	public static chatbot_planner(data: TDataChatbot): CancelablePromise<unknown> {
+		const { requestBody } = data;
 		return __request(OpenAPI, {
-			method: 'POST',
-			url: '/api/v1/utils/chatbot',
-			body: requestBody,
-			mediaType: 'application/json',
-			errors: {
-				422: `Validation Error`,
-			},
+		  method: 'POST',
+		  url: '/api/v1/utils/chatbot_planner',
+		  body: requestBody,
+		  mediaType: 'application/json',
+		  errors: {
+			422: `Validation Error`,
+		  },
 		});
-	}
+	  }
+	  /**
+	 * Chatbot_chat
+	 * @returns unknown Successful Response
+	 * @throws ApiError
+	 */
+	  public static chatbot_chat(data: TDataChatbot): CancelablePromise<unknown> {
+		const { requestBody } = data;
+		return __request(OpenAPI, {
+		  method: 'POST',
+		  url: '/api/v1/utils/chatbot_chat',
+		  body: requestBody,
+		  mediaType: 'application/json',
+		  errors: {
+			422: `Validation Error`,
+		  },
+		});
+	  }
+
+	
+	
 
 }
 

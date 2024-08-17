@@ -80,7 +80,7 @@ class ChatbotManager:
                 }
             ]
         return api_spec
-    
+
     def initialize(self):
         if self.agent is not None:
             return
@@ -125,7 +125,7 @@ class ChatbotManager:
             logger.info(f"Processing query: {query}")
             response = self.agent.invoke(query)
             logger.info("Query processed successfully")
-            
+
             # Handle the response
             if isinstance(response, dict):
                 output = response.get('output', '')
@@ -159,8 +159,10 @@ class ChatbotManager:
                 return str(data)
         except ValueError:
             return response.text
-        
+
 chatbot_manager = ChatbotManager()
 
 def process_query(query: str) -> str:
     return chatbot_manager.process_query(query)
+
+
