@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Box,
   IconButton,
@@ -15,28 +15,80 @@ import {
   DrawerContent,
   DrawerCloseButton,
   useDisclosure,
+  HStack,
+  Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
-import { FaBars, FaRegCommentDots } from "react-icons/fa";
+import { FaBars, FaRegCommentDots, FaMinus } from "react-icons/fa";
 import { FiLogOut, FiUser, FiMoon, FiSun } from "react-icons/fi";
 import useAuth from "../../hooks/useAuth";
-import { ChatBox } from "../Common/Chatbox"; // Adjust the import path as needed
+import { ChatBox, ChatBoxRef } from "../Common/Chatbox"; // Adjust the import path as needed
+
+interface Message {
+  text: string;
+  isUser: boolean;
+}
 
 const UserMenu = () => {
   const { logout } = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
   const iconColor = useColorModeValue("green.500", "white");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [chatMode, setChatMode] = useState<'chat' | 'planner'>('chat');
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [hasMessages, setHasMessages] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const chatBoxRef = useRef<ChatBoxRef>(null);
 
   const handleLogout = async () => {
     logout();
   };
 
-  const handleChatOpen = (mode: 'chat' | 'planner') => {
-    setChatMode(mode);
+  const handleChatOpen = () => {
+    setIsMinimized(false);
     onOpen();
   };
+
+  const handleMinimize = () => {
+    setIsMinimized(true);
+    onClose();
+  };
+
+  const handleClose = () => {
+    setIsMinimized(false);
+    setHasMessages(false);
+    setMessages([]);
+    if (chatBoxRef.current) {
+      chatBoxRef.current.resetMessages();
+    }
+    onClose();
+  };
+
+  const handleChatStateChange = (newHasMessages: boolean) => {
+    setHasMessages(newHasMessages);
+  };
+
+  const handleMessagesChange = (newMessages: Message[]) => {
+    setMessages(newMessages);
+    setHasMessages(newMessages.length > 0);
+  };
+
+  const chatIcon = isMinimized && hasMessages ? (
+    <Box position="relative">
+      <FaRegCommentDots />
+      <Box
+        position="absolute"
+        top="-2px"
+        right="-2px"
+        bg="red.500"
+        borderRadius="full"
+        w="10px"
+        h="10px"
+      />
+    </Box>
+  ) : (
+    <FaRegCommentDots />
+  );
 
   return (
     <>
@@ -52,11 +104,11 @@ const UserMenu = () => {
         />
         <IconButton
           aria-label="Chat bot"
-          icon={<FaRegCommentDots />}
+          icon={chatIcon}
           mr={2}
           variant="ghost"
           color={iconColor}
-          onClick={() => handleChatOpen('chat')}
+          onClick={handleChatOpen}
         />
         
         <Menu>
@@ -98,11 +150,11 @@ const UserMenu = () => {
         />
         <IconButton
           aria-label="Chat bot"
-          icon={<FaRegCommentDots />}
+          icon={chatIcon}
           mr={2}
           variant="ghost"
           color={iconColor}
-          onClick={() => handleChatOpen('chat')}
+          onClick={handleChatOpen}
         />
         <Menu>
           <MenuButton
@@ -132,13 +184,38 @@ const UserMenu = () => {
       </Box>
 
       {/* ChatBox Drawer */}
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="lg">
+      <Drawer 
+        isOpen={isOpen} 
+        placement="right" 
+        onClose={handleClose}
+        size="md"
+      >
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>Chat</DrawerHeader>
+          <DrawerHeader>
+            <HStack justifyContent="space-between">
+              <Text>ChatBot</Text>
+              <HStack>
+                <Tooltip label={hasMessages ? "Minimize" : "Chat is empty"}>
+                  <IconButton
+                    aria-label="Minimize"
+                    icon={<FaMinus />}
+                    size="sm"
+                    onClick={handleMinimize}
+                    isDisabled={!hasMessages}
+                  />
+                </Tooltip>
+                <DrawerCloseButton position="static" />
+              </HStack>
+            </HStack>
+          </DrawerHeader>
           <DrawerBody p={0}>
-            <ChatBox mode={chatMode} onClose={onClose} />
+            <ChatBox 
+              ref={chatBoxRef}
+              messages={messages}
+              onMessagesChange={handleMessagesChange}
+              onStateChange={handleChatStateChange}
+            />
           </DrawerBody>
         </DrawerContent>
       </Drawer>

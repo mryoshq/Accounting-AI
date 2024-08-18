@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import {
   VStack,
   HStack,
@@ -9,6 +9,9 @@ import {
   useColorModeValue,
   Flex,
   Box,
+  Tabs,
+  TabList,
+  Tab,
 } from '@chakra-ui/react';
 import { FaRegUserCircle, FaRobot, FaTrash } from 'react-icons/fa';
 import { motion } from 'framer-motion';
@@ -20,7 +23,14 @@ interface Message {
 }
 
 interface ChatBoxProps {
-  mode: 'planner' | 'chat';
+  initialMode?: 'chat' | 'planner';
+  messages: Message[];
+  onMessagesChange: (messages: Message[]) => void;
+  onStateChange: (hasMessages: boolean) => void;
+}
+
+export interface ChatBoxRef {
+  resetMessages: () => void;
 }
 
 const TypingIndicator: React.FC = () => (
@@ -71,8 +81,8 @@ const MessageContent: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ initialMode = 'chat', messages, onMessagesChange, onStateChange }, ref) => {
+  const [mode, setMode] = useState<'chat' | 'planner'>(initialMode);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -80,6 +90,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
   const userBgColor = useColorModeValue('blue.100', 'blue.700');
   const botBgColor = useColorModeValue('green.100', 'green.700');
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    resetMessages: () => {
+      onMessagesChange([]);
+      onStateChange(false);
+    },
+  }));
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,9 +109,11 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
     if (!input.trim()) return;
 
     const userMessage: Message = { text: input, isUser: true };
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    onMessagesChange(newMessages);
     setInput('');
     setIsLoading(true);
+    onStateChange(true);
 
     const chatbotQuery: ChatbotQuery = { query: input };
 
@@ -113,7 +132,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
           botResponse = 'Unexpected response format';
         }
         const botMessage: Message = { text: botResponse, isUser: false };
-        setMessages(prev => [...prev, botMessage]);
+        onMessagesChange([...newMessages, botMessage]);
       })
       .catch((error) => {
         if (error.name === 'AbortError') {
@@ -121,7 +140,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
         } else {
           console.error('Error:', error);
           const errorMessage: Message = { text: 'Sorry, an error occurred.', isUser: false };
-          setMessages(prev => [...prev, errorMessage]);
+          onMessagesChange([...newMessages, errorMessage]);
         }
       })
       .finally(() => {
@@ -134,13 +153,25 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    setMessages([]);
+    onMessagesChange([]);
     setInput('');
     setIsLoading(false);
+    onStateChange(false);
+  };
+
+  const handleModeChange = (index: number) => {
+    setMode(index === 0 ? 'chat' : 'planner');
   };
 
   return (
     <Flex direction="column" h="full">
+      <Tabs isFitted variant='enclosed' onChange={handleModeChange} mb={2}>
+        <TabList>
+          <Tab>Chat</Tab>
+          <Tab>Planner</Tab>
+          <Tab isDisabled>Future</Tab>
+        </TabList>
+      </Tabs>
       <VStack flex={1} overflowY="auto" p={4} bg={bgColor} spacing={4} align="stretch">
         {messages.map((message, index) => (
           <HStack key={index} justifyContent={message.isUser ? 'flex-end' : 'flex-start'} alignItems="flex-start">
@@ -179,12 +210,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
             <Input 
               value={input} 
               onChange={(e) => setInput(e.target.value)} 
-              placeholder="Type a message..."
+              placeholder={`Type a ${mode === 'chat' ? 'message' : 'task'}...`}
               disabled={isLoading}
               size="md"
             />
+            
             <Button type="submit" colorScheme="blue" isLoading={isLoading} size="md">
-              Ask
+              Send
             </Button>
             <Button 
               onClick={handleReset} 
@@ -200,4 +232,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ mode }) => {
       </Box>
     </Flex>
   );
-};
+});
+
+ChatBox.displayName = 'ChatBox';
