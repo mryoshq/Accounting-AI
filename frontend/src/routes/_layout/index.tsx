@@ -29,7 +29,6 @@ import {
   ModalBody,
   ModalCloseButton,
   Grid,
-  Stack,
 } from "@chakra-ui/react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -50,7 +49,6 @@ import {
 } from 'recharts';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
-import { ChatBox } from '../../components/Common/Chatbox';
 
 import {
   ExternalInvoicesService,
@@ -628,23 +626,17 @@ function Dashboard() {
       </SimpleGrid>
 
 
-      <Flex mt={4} height="1000px" direction="column" alignItems="center">
-        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={4} width="100%">
-          <Stack spacing={4} height="100%">
-            <Box>
-              <text>planner tools</text>
-              <ChatBox mode="planner" />
-            </Box>
-          </Stack>
-        </Box>
+      
 
-        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={4} width="100%">
-          <Stack spacing={4} height="100%">
+      <Flex mt={4} minHeight="600px">
+        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={10} width="100%">
+          <Grid templateColumns="1fr 2fr" gap={4} height="100%">
             <Box>
-              <text>chat with function calling</text>
-              <ChatBox mode="chat" />
+              <Button onClick={onOpen} colorScheme="blue" mt={4} width="100%">
+                Generate Report
+              </Button>
             </Box>
-          </Stack>
+          </Grid>
         </Box>
       </Flex>
 
