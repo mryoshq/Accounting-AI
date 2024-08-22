@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ChatbotQuery,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ChatbotQuery,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse,TaskCreate,TaskPublic,TasksPublic,TaskUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -369,11 +369,14 @@ export type TDataTestEmail = {
                 emailTo: string
                 
             }
-export type TDataChatbot = {
+export type TDataChatbotPlanner = {
                 requestBody: ChatbotQuery
                 
             }
-
+export type TDataChatbotChat = {
+                requestBody: ChatbotQuery
+                
+            }
 
 export class UtilsService {
 
@@ -400,42 +403,44 @@ emailTo,
 	}
 
 	/**
-	 * Chatbot_planner
+	 * Chatbot Planner
 	 * @returns unknown Successful Response
 	 * @throws ApiError
 	 */
-	public static chatbot_planner(data: TDataChatbot): CancelablePromise<unknown> {
-		const { requestBody } = data;
+	public static chatbotPlanner(data: TDataChatbotPlanner): CancelablePromise<unknown> {
+		const {
+requestBody,
+} = data;
 		return __request(OpenAPI, {
-		  method: 'POST',
-		  url: '/api/v1/utils/chatbot_planner',
-		  body: requestBody,
-		  mediaType: 'application/json',
-		  errors: {
-			422: `Validation Error`,
-		  },
+			method: 'POST',
+			url: '/api/v1/utils/chatbot_planner',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
 		});
-	  }
-	  /**
-	 * Chatbot_chat
-	 * @returns unknown Successful Response
-	 * @throws ApiError
-	 */
-	  public static chatbot_chat(data: TDataChatbot): CancelablePromise<unknown> {
-		const { requestBody } = data;
-		return __request(OpenAPI, {
-		  method: 'POST',
-		  url: '/api/v1/utils/chatbot_chat',
-		  body: requestBody,
-		  mediaType: 'application/json',
-		  errors: {
-			422: `Validation Error`,
-		  },
-		});
-	  }
+	}
 
-	
-	
+	/**
+	 * Chatbot Chat
+	 * @returns unknown Successful Response
+	 * @throws ApiError
+	 */
+	public static chatbotChat(data: TDataChatbotChat): CancelablePromise<unknown> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/utils/chatbot_chat',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
 
 }
 
@@ -2272,6 +2277,146 @@ requestBody,
 			url: '/api/v1/reporting/report',
 			body: requestBody,
 			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+}
+
+export type TDataReadTasks = {
+                limit?: number
+skip?: number
+                
+            }
+export type TDataCreateTask = {
+                requestBody: TaskCreate
+                
+            }
+export type TDataReadTask = {
+                taskId: number
+                
+            }
+export type TDataUpdateTask = {
+                requestBody: TaskUpdate
+taskId: number
+                
+            }
+export type TDataDeleteTask = {
+                taskId: number
+                
+            }
+
+export class TasksService {
+
+	/**
+	 * Read Tasks
+	 * Retrieve tasks.
+	 * @returns TasksPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readTasks(data: TDataReadTasks = {}): CancelablePromise<TasksPublic> {
+		const {
+limit = 100,
+skip = 0,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/tasks/',
+			query: {
+				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Create Task
+	 * Create new task.
+	 * @returns TaskPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static createTask(data: TDataCreateTask): CancelablePromise<TaskPublic> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/tasks/',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read Task
+	 * Get task by ID.
+	 * @returns TaskPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readTask(data: TDataReadTask): CancelablePromise<TaskPublic> {
+		const {
+taskId,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/tasks/{task_id}',
+			path: {
+				task_id: taskId
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Update Task
+	 * Update an existing task.
+	 * @returns TaskPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static updateTask(data: TDataUpdateTask): CancelablePromise<TaskPublic> {
+		const {
+requestBody,
+taskId,
+} = data;
+		return __request(OpenAPI, {
+			method: 'PATCH',
+			url: '/api/v1/tasks/{task_id}',
+			path: {
+				task_id: taskId
+			},
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Task
+	 * Delete task.
+	 * @returns TaskPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteTask(data: TDataDeleteTask): CancelablePromise<TaskPublic> {
+		const {
+taskId,
+} = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/tasks/{task_id}',
+			path: {
+				task_id: taskId
+			},
 			errors: {
 				422: `Validation Error`,
 			},

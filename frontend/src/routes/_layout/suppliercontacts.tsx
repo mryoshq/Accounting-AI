@@ -147,8 +147,8 @@ function SupplierContacts() {
 
   return (
     <Container maxW="full">
-      <Flex justifyContent="space-between" alignItems="center" mb={4} mt={7}>
-          <Heading size="lg">Supplier Contacts Management</Heading>
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+          <Heading size="md">Supplier Contacts Management</Heading>
           <Navbar type="SupplierContact" />
       </Flex>
       <SupplierContactsTable

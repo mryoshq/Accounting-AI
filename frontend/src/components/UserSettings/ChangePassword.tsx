@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Container,
+  Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -52,12 +53,19 @@ const ChangePassword = () => {
   }
 
   return (
-    <>
-      <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
-        <Heading size="sm" py={4}>
-          Change Password
-        </Heading>
-        <Box w={{ sm: "full", md: "50%" }}>
+    <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
+      <Flex justifyContent="space-between" alignItems="center" py={4}>
+        <Heading size="sm">Change Password</Heading>
+        <Button
+          variant="primary"
+          type="submit"
+          isLoading={isSubmitting}
+        >
+          Save
+        </Button>
+      </Flex>
+      <Flex justifyContent="center">
+        <Box w={{ base: "full", md: "50%" }} maxWidth="500px">
           <FormControl isRequired isInvalid={!!errors.current_password}>
             <FormLabel color={color} htmlFor="current_password">
               Current password
@@ -100,17 +108,10 @@ const ChangePassword = () => {
               </FormErrorMessage>
             )}
           </FormControl>
-          <Button
-            variant="primary"
-            mt={4}
-            type="submit"
-            isLoading={isSubmitting}
-          >
-            Save
-          </Button>
         </Box>
-      </Container>
-    </>
+      </Flex>
+    </Container>
   )
 }
+
 export default ChangePassword

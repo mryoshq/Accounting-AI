@@ -18,27 +18,36 @@ import {
   HStack,
   Text,
   Tooltip,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
 } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
-import { FaBars, FaRegCommentDots, FaMinus } from "react-icons/fa";
+import { FaBars, FaRegCommentDots, FaMinus, FaPhoneSquare, FaTools, FaTasks, FaChartBar } from "react-icons/fa";
 import { FiLogOut, FiUser, FiMoon, FiSun } from "react-icons/fi";
 import useAuth from "../../hooks/useAuth";
-import { ChatBox, ChatBoxRef } from "../Common/Chatbox"; // Adjust the import path as needed
-
-interface Message {
-  text: string;
-  isUser: boolean;
-}
+import { ChatBox, ChatBoxRef } from "../Common/Chatbox";
+import SupplierContacts from "../../routes/_layout/suppliercontacts";
+import CustomerContacts from "../../routes/_layout/customercontacts";
+import ReportingComponent from "../Tools/ReportingComponent"; 
+import TasksComponent from "../Tools/TasksComponent"; 
 
 const UserMenu = () => {
   const { logout } = useAuth();
+  const auth = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
   const iconColor = useColorModeValue("green.500", "white");
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isChatOpen, onOpen: onChatOpen, onClose: onChatClose } = useDisclosure();
+  const { isOpen: isContactsOpen, onOpen: onContactsOpen, onClose: onContactsClose } = useDisclosure();
+  const { isOpen: isReportingOpen, onOpen: onReportingOpen, onClose: onReportingClose } = useDisclosure();
+  const { isOpen: isTasksOpen, onOpen: onTasksOpen, onClose: onTasksClose } = useDisclosure();
   const [isMinimized, setIsMinimized] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
   const chatBoxRef = useRef<ChatBoxRef>(null);
+
+
 
   const handleLogout = async () => {
     logout();
@@ -46,32 +55,27 @@ const UserMenu = () => {
 
   const handleChatOpen = () => {
     setIsMinimized(false);
-    onOpen();
+    onChatOpen();
   };
 
   const handleMinimize = () => {
     setIsMinimized(true);
-    onClose();
+    onChatClose();
   };
 
   const handleClose = () => {
     setIsMinimized(false);
     setHasMessages(false);
-    setMessages([]);
     if (chatBoxRef.current) {
       chatBoxRef.current.resetMessages();
     }
-    onClose();
+    onChatClose();
   };
 
   const handleChatStateChange = (newHasMessages: boolean) => {
     setHasMessages(newHasMessages);
   };
 
-  const handleMessagesChange = (newMessages: Message[]) => {
-    setMessages(newMessages);
-    setHasMessages(newMessages.length > 0);
-  };
 
   const chatIcon = isMinimized && hasMessages ? (
     <Box position="relative">
@@ -90,6 +94,47 @@ const UserMenu = () => {
     <FaRegCommentDots />
   );
 
+  const ReportingWrapper = () => {
+    return (
+      <>
+        <MenuItem icon={<FaChartBar fontSize="18px" />} onClick={onReportingOpen}>
+          Reporting
+        </MenuItem>
+        <Drawer placement="bottom" onClose={onReportingClose} isOpen={isReportingOpen} size="xl">
+          <DrawerOverlay />
+          <DrawerContent>
+            <DrawerCloseButton />
+            <DrawerHeader borderBottomWidth='1px'>Generate Report</DrawerHeader>
+            <DrawerBody>
+              <ReportingComponent auth={auth} />
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+      </>
+    );
+  };
+
+  const TasksWrapper = () => {
+    return (
+      <>
+        <MenuItem icon={<FaTasks fontSize="18px" />} onClick={onTasksOpen}>
+          Tasks
+        </MenuItem>
+        <Drawer placement="top" onClose={onTasksClose} isOpen={isTasksOpen} size="xl">
+          <DrawerOverlay />
+          <DrawerContent>
+            <DrawerCloseButton />
+            <DrawerHeader borderBottomWidth='1px'>Tasks</DrawerHeader>
+            <DrawerBody pt={0}>
+              <TasksComponent />
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+      </>
+    );
+  };
+
+
   return (
     <>
       {/* Desktop */}
@@ -102,6 +147,16 @@ const UserMenu = () => {
           variant="ghost"
           color={iconColor}
         />
+
+        <IconButton
+          aria-label="Stakeholders Contacts"
+          icon={<FaPhoneSquare />}
+          onClick={onContactsOpen}
+          variant="ghost"
+          color={iconColor}
+          mr={2}
+        />
+
         <IconButton
           aria-label="Chat bot"
           icon={chatIcon}
@@ -110,7 +165,26 @@ const UserMenu = () => {
           color={iconColor}
           onClick={handleChatOpen}
         />
-        
+
+
+
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label="Tools"
+            icon={<FaTools />}
+            bg="transparent"
+            _hover={{ bg: "transparent" }}
+            _active={{ bg: "transparent" }}
+            isRound
+            color={iconColor}
+          />
+          <MenuList>
+            <TasksWrapper />
+            <ReportingWrapper />
+          </MenuList>
+        </Menu>
+
         <Menu>
           <MenuButton
             as={IconButton}
@@ -156,6 +230,14 @@ const UserMenu = () => {
           color={iconColor}
           onClick={handleChatOpen}
         />
+        <IconButton
+          aria-label="Stakeholders Contacts"
+          icon={<FaPhoneSquare />}
+          onClick={onContactsOpen}
+          variant="ghost"
+          color={iconColor}
+          mr={2}
+        />
         <Menu>
           <MenuButton
             as={IconButton}
@@ -171,6 +253,7 @@ const UserMenu = () => {
             <MenuItem icon={<FiUser fontSize="18px" />} as={Link} to="settings">
               My profile
             </MenuItem>
+            <ReportingWrapper />
             <MenuItem
               icon={<FiLogOut fontSize="18px" />}
               onClick={handleLogout}
@@ -185,10 +268,10 @@ const UserMenu = () => {
 
       {/* ChatBox Drawer */}
       <Drawer 
-        isOpen={isOpen} 
+        isOpen={isChatOpen} 
         placement="right" 
         onClose={handleClose}
-        size="md"
+        size="xl"
       >
         <DrawerOverlay />
         <DrawerContent>
@@ -212,10 +295,42 @@ const UserMenu = () => {
           <DrawerBody p={0}>
             <ChatBox 
               ref={chatBoxRef}
-              messages={messages}
-              onMessagesChange={handleMessagesChange}
               onStateChange={handleChatStateChange}
             />
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Contacts Drawer */}
+      <Drawer
+        isOpen={isContactsOpen}
+        placement="left"
+        onClose={onContactsClose}
+        size="xl"
+      >
+        <DrawerOverlay />
+        <DrawerContent maxWidth="70%" marginX="auto">
+          <DrawerHeader>
+            <HStack justifyContent="space-between">
+              <Text>STAKEHOLDERS</Text>
+              <DrawerCloseButton position="static" />
+            </HStack>
+          </DrawerHeader>
+          <DrawerBody>
+            <Tabs isFitted variant="line" colorScheme='blue'>
+              <TabList mb="1em">
+                <Tab>SUPPLIERS </Tab>
+                <Tab>CUSTOMERS </Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel>
+                  <SupplierContacts />
+                </TabPanel>
+                <TabPanel>
+                  <CustomerContacts />
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </DrawerBody>
         </DrawerContent>
       </Drawer>

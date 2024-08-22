@@ -147,8 +147,8 @@ function CustomerContacts() {
 
   return (
     <Container maxW="full">
-      <Flex justifyContent="space-between" alignItems="center" mb={4} mt={7}>
-          <Heading size="lg">Customer Contacts Management</Heading>
+      <Flex justifyContent="space-between" alignItems="center" mb={4} >
+          <Heading size="md">Customer Contacts Management</Heading>
           <Navbar type="CustomerContact" />
         </Flex>
       <CustomerContactsTable

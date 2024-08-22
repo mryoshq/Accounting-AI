@@ -1860,6 +1860,141 @@ export const $SuppliersPublic = {
 	},
 } as const;
 
+export const $TaskCreate = {
+	properties: {
+		title: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		status: {
+	type: 'string',
+	default: 'To Do',
+},
+		due_date: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		is_active: {
+	type: 'boolean',
+	default: true,
+},
+	},
+} as const;
+
+export const $TaskPublic = {
+	properties: {
+		title: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		status: {
+	type: 'string',
+	default: 'To Do',
+},
+		due_date: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		is_active: {
+	type: 'boolean',
+	default: true,
+},
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $TaskUpdate = {
+	properties: {
+		title: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		status: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		due_date: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		is_active: {
+	type: 'any-of',
+	contains: [{
+	type: 'boolean',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
+export const $TasksPublic = {
+	properties: {
+		data: {
+	type: 'array',
+	contains: {
+		type: 'TaskPublic',
+	},
+	isRequired: true,
+},
+		count: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $Token = {
 	properties: {
 		access_token: {

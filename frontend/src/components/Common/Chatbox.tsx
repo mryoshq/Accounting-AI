@@ -12,6 +12,8 @@ import {
   Tabs,
   TabList,
   Tab,
+  TabPanels,
+  TabPanel,
 } from '@chakra-ui/react';
 import { FaRegUserCircle, FaRobot, FaTrash } from 'react-icons/fa';
 import { motion } from 'framer-motion';
@@ -23,9 +25,6 @@ interface Message {
 }
 
 interface ChatBoxProps {
-  initialMode?: 'chat' | 'planner';
-  messages: Message[];
-  onMessagesChange: (messages: Message[]) => void;
   onStateChange: (hasMessages: boolean) => void;
 }
 
@@ -81,10 +80,11 @@ const MessageContent: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ initialMode = 'chat', messages, onMessagesChange, onStateChange }, ref) => {
-  const [mode, setMode] = useState<'chat' | 'planner'>(initialMode);
+export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ onStateChange }, ref) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [messages, setMessages] = useState<Message[][]>([[], [], []]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState([false, false, false]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const bgColor = useColorModeValue('gray.50', 'gray.700');
   const userBgColor = useColorModeValue('blue.100', 'blue.700');
@@ -93,7 +93,8 @@ export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ initialMode = 'ch
 
   useImperativeHandle(ref, () => ({
     resetMessages: () => {
-      onMessagesChange([]);
+      setMessages([[], [], []]);
+      setIsLoading([false, false, false]);
       onStateChange(false);
     },
   }));
@@ -109,15 +110,20 @@ export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ initialMode = 'ch
     if (!input.trim()) return;
 
     const userMessage: Message = { text: input, isUser: true };
-    const newMessages = [...messages, userMessage];
-    onMessagesChange(newMessages);
+    const updatedMessages = [...messages];
+    updatedMessages[activeTab] = [...updatedMessages[activeTab], userMessage];
+    setMessages(updatedMessages);
     setInput('');
-    setIsLoading(true);
+    setIsLoading(prev => {
+      const newLoading = [...prev];
+      newLoading[activeTab] = true;
+      return newLoading;
+    });
     onStateChange(true);
 
     const chatbotQuery: ChatbotQuery = { query: input };
 
-    const chatbotService = mode === 'planner' ? UtilsService.chatbot_planner : UtilsService.chatbot_chat;
+    const chatbotService = activeTab === 1 ? UtilsService.chatbotPlanner : UtilsService.chatbotChat;
 
     abortControllerRef.current = new AbortController();
 
@@ -132,7 +138,9 @@ export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ initialMode = 'ch
           botResponse = 'Unexpected response format';
         }
         const botMessage: Message = { text: botResponse, isUser: false };
-        onMessagesChange([...newMessages, botMessage]);
+        const newMessages = [...updatedMessages];
+        newMessages[activeTab] = [...newMessages[activeTab], botMessage];
+        setMessages(newMessages);
       })
       .catch((error) => {
         if (error.name === 'AbortError') {
@@ -140,11 +148,17 @@ export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ initialMode = 'ch
         } else {
           console.error('Error:', error);
           const errorMessage: Message = { text: 'Sorry, an error occurred.', isUser: false };
-          onMessagesChange([...newMessages, errorMessage]);
+          const newMessages = [...updatedMessages];
+          newMessages[activeTab] = [...newMessages[activeTab], errorMessage];
+          setMessages(newMessages);
         }
       })
       .finally(() => {
-        setIsLoading(false);
+        setIsLoading(prev => {
+          const newLoading = [...prev];
+          newLoading[activeTab] = false;
+          return newLoading;
+        });
         abortControllerRef.current = null;
       });
   };
@@ -153,76 +167,87 @@ export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ initialMode = 'ch
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    onMessagesChange([]);
+    const newMessages = [...messages];
+    newMessages[activeTab] = [];
+    setMessages(newMessages);
     setInput('');
-    setIsLoading(false);
-    onStateChange(false);
+    setIsLoading(prev => {
+      const newLoading = [...prev];
+      newLoading[activeTab] = false;
+      return newLoading;
+    });
+    onStateChange(messages.some((tabMessages, index) => index !== activeTab && tabMessages.length > 0));
   };
 
-  const handleModeChange = (index: number) => {
-    setMode(index === 0 ? 'chat' : 'planner');
+  const handleTabChange = (index: number) => {
+    setActiveTab(index);
   };
 
   return (
-    <Flex direction="column" h="full">
-      <Tabs isFitted variant='enclosed' onChange={handleModeChange} mb={2}>
+    <Flex direction="column" h="100%">
+      <Tabs isFitted variant='enclosed-colored' onChange={handleTabChange} index={activeTab} display="flex" flexDirection="column" flex={1}>
         <TabList>
           <Tab>Chat</Tab>
           <Tab>Planner</Tab>
           <Tab isDisabled>Future</Tab>
         </TabList>
+        <TabPanels flex={1} display="flex" flexDirection="column">
+          {[0, 1, 2].map((tabIndex) => (
+            <TabPanel key={tabIndex} h="100%" p={0} display="flex" flexDirection="column" flex={1}>
+              <VStack flex={1} overflowY="auto" p={4} bg={bgColor} spacing={4} align="stretch">
+                {messages[tabIndex].map((message, index) => (
+                  <HStack key={index} justifyContent={message.isUser ? 'flex-end' : 'flex-start'} alignItems="flex-start">
+                    {!message.isUser && (
+                      <Icon 
+                        as={FaRobot} 
+                        boxSize={7} 
+                        color="green.500"
+                        mt={3}
+                      />
+                    )}
+                    <Box 
+                      bg={message.isUser ? userBgColor : botBgColor} 
+                      p={4} 
+                      borderRadius="lg"
+                      maxW="70%"
+                    >
+                      <MessageContent text={message.text} />
+                    </Box>
+                    {message.isUser && (
+                      <Icon 
+                        as={FaRegUserCircle} 
+                        boxSize={7} 
+                        color="blue.500"
+                        mt={3}
+                      />
+                    )}
+                  </HStack>
+                ))}
+                {isLoading[tabIndex] && <TypingIndicator />}
+                <div ref={messagesEndRef} />
+              </VStack>
+            </TabPanel>
+          ))}
+        </TabPanels>
       </Tabs>
-      <VStack flex={1} overflowY="auto" p={4} bg={bgColor} spacing={4} align="stretch">
-        {messages.map((message, index) => (
-          <HStack key={index} justifyContent={message.isUser ? 'flex-end' : 'flex-start'} alignItems="flex-start">
-            {!message.isUser && (
-              <Icon 
-                as={FaRobot} 
-                boxSize={7} 
-                color="green.500"
-                mt={3}
-              />
-            )}
-            <Box 
-              bg={message.isUser ? userBgColor : botBgColor} 
-              p={4} 
-              borderRadius="lg"
-              maxW="70%"
-            >
-              <MessageContent text={message.text} />
-            </Box>
-            {message.isUser && (
-              <Icon 
-                as={FaRegUserCircle} 
-                boxSize={7} 
-                color="blue.500"
-                mt={3}
-              />
-            )}
-          </HStack>
-        ))}
-        {isLoading && <TypingIndicator />}
-        <div ref={messagesEndRef} />
-      </VStack>
       <Box p={4} borderTopWidth="1px" bg={useColorModeValue('white', 'gray.800')}>
         <form onSubmit={handleSubmit}>
           <HStack>
             <Input 
               value={input} 
               onChange={(e) => setInput(e.target.value)} 
-              placeholder={`Type a ${mode === 'chat' ? 'message' : 'task'}...`}
-              disabled={isLoading}
+              placeholder={`Type a ${activeTab === 0 ? 'message' : 'task'}...`}
+              disabled={isLoading[activeTab]}
               size="md"
             />
-            
-            <Button type="submit" colorScheme="blue" isLoading={isLoading} size="md">
+            <Button type="submit" colorScheme="blue" isLoading={isLoading[activeTab]} size="md">
               Send
             </Button>
             <Button 
               onClick={handleReset} 
               variant="ghost"
               leftIcon={<Icon as={FaTrash} />}
-              isDisabled={isLoading || messages.length === 0}
+              isDisabled={isLoading[activeTab] || messages[activeTab].length === 0}
               size="md"
             >
               Reset

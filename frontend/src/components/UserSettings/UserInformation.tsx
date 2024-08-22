@@ -3,12 +3,14 @@ import {
   Button,
   Container,
   Flex,
+  Table,
+  Tbody,
+  Tr,
+  Td,
   FormControl,
   FormErrorMessage,
-  FormLabel,
-  Heading,
   Input,
-  Text,
+  Heading,
   useColorModeValue,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -25,9 +27,46 @@ import useAuth from "../../hooks/useAuth"
 import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern } from "../../utils"
 
+const PicturePlaceholder = () => (
+  <Box
+    width="150px"
+    height="200px"
+    position="relative"
+    border="2px solid"
+    borderColor="gray.300"
+    borderRadius="md"
+    overflow="hidden"
+  >
+    <Box
+      position="absolute"
+      top="0"
+      left="0"
+      right="0"
+      bottom="0"
+      _before={{
+        content: '""',
+        position: "absolute",
+        top: "0",
+        left: "0",
+        right: "0",
+        bottom: "0",
+        background: "linear-gradient(to bottom right, transparent calc(50% - 1px), red, transparent calc(50% + 1px))"
+      }}
+      _after={{
+        content: '""',
+        position: "absolute",
+        top: "0",
+        left: "0",
+        right: "0",
+        bottom: "0",
+        background: "linear-gradient(to top right, transparent calc(50% - 1px), red, transparent calc(50% + 1px))"
+      }}
+    />
+  </Box>
+)
+
 const UserInformation = () => {
   const queryClient = useQueryClient()
-  const color = useColorModeValue("inherit", "ui.light")
   const showToast = useCustomToast()
   const [editMode, setEditMode] = useState(false)
   const { user: currentUser } = useAuth()
@@ -55,13 +94,13 @@ const UserInformation = () => {
       UsersService.updateUserMe({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
+      setEditMode(false)
     },
     onError: (err: ApiError) => {
       const errDetail = (err.body as any)?.detail
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
     onSettled: () => {
-      // TODO: can we do just one call now?
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
@@ -73,79 +112,87 @@ const UserInformation = () => {
 
   const onCancel = () => {
     reset()
-    toggleEditMode()
+    setEditMode(false)
   }
 
+  const borderColor = useColorModeValue("green", "white")
+
   return (
-    <>
-      <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
-        <Heading size="sm" py={4}>
-          User Information
-        </Heading>
-        <Box w={{ sm: "full", md: "50%" }}>
-          <FormControl>
-            <FormLabel color={color} htmlFor="name">
-              Full name
-            </FormLabel>
-            {editMode ? (
-              <Input
-                id="name"
-                {...register("full_name", { maxLength: 30 })}
-                type="text"
-                size="md"
-              />
-            ) : (
-              <Text
-                size="md"
-                py={2}
-                color={!currentUser?.full_name ? "ui.dim" : "inherit"}
-              >
-                {currentUser?.full_name || "N/A"}
-              </Text>
-            )}
-          </FormControl>
-          <FormControl mt={4} isInvalid={!!errors.email}>
-            <FormLabel color={color} htmlFor="email">
-              Email
-            </FormLabel>
-            {editMode ? (
-              <Input
-                id="email"
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: emailPattern,
-                })}
-                type="email"
-                size="md"
-              />
-            ) : (
-              <Text size="md" py={2}>
-                {currentUser?.email}
-              </Text>
-            )}
-            {errors.email && (
-              <FormErrorMessage>{errors.email.message}</FormErrorMessage>
-            )}
-          </FormControl>
-          <Flex mt={4} gap={3}>
-            <Button
-              variant="primary"
-              onClick={toggleEditMode}
-              type={editMode ? "button" : "submit"}
-              isLoading={editMode ? isSubmitting : false}
-              isDisabled={editMode ? !isDirty || !getValues("email") : false}
-            >
-              {editMode ? "Save" : "Edit"}
-            </Button>
-            {editMode && (
-              <Button onClick={onCancel} isDisabled={isSubmitting}>
-                Cancel
-              </Button>
-            )}
-          </Flex>
+    <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
+      <Flex justifyContent="space-between" alignItems="center" py={4}>
+        <Heading size="sm">User Information</Heading>
+        <Button
+          variant="primary"
+          onClick={editMode ? handleSubmit(onSubmit) : toggleEditMode}
+          type="button"
+          isLoading={isSubmitting}
+          isDisabled={editMode && (!isDirty || !getValues("email"))}
+        >
+          {editMode ? "Save" : "Edit"}
+        </Button>
+      </Flex>
+      <Flex justifyContent="center">
+        <Box overflowX="auto" maxWidth="500px">
+          <Table variant="simple" borderColor={borderColor}>
+            <Tbody>
+              <Tr>
+                <Td colSpan={2} borderColor={borderColor}>
+                  <Flex justifyContent="center" py={4}>
+                    <PicturePlaceholder />
+                  </Flex>
+                </Td>
+              </Tr>
+              <Tr>
+                <Td fontWeight="bold" borderColor={borderColor}>Full Name</Td>
+                <Td borderColor={borderColor}>
+                  {editMode ? (
+                    <FormControl isInvalid={!!errors.full_name}>
+                      <Input
+                        {...register("full_name", { maxLength: 30 })}
+                        placeholder="Enter full name"
+                      />
+                      {errors.full_name && (
+                        <FormErrorMessage>{errors.full_name.message}</FormErrorMessage>
+                      )}
+                    </FormControl>
+                  ) : (
+                    currentUser?.full_name || "N/A"
+                  )}
+                </Td>
+              </Tr>
+              <Tr>
+                <Td fontWeight="bold" borderColor={borderColor}>Email</Td>
+                <Td borderColor={borderColor}>
+                  {editMode ? (
+                    <FormControl isInvalid={!!errors.email}>
+                      <Input
+                        {...register("email", {
+                          required: "Email is required",
+                          pattern: emailPattern,
+                        })}
+                        placeholder="Enter email"
+                      />
+                      {errors.email && (
+                        <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+                      )}
+                    </FormControl>
+                  ) : (
+                    currentUser?.email
+                  )}
+                </Td>
+              </Tr>
+            </Tbody>
+          </Table>
         </Box>
-      </Container>
-    </>
+      </Flex>
+      {editMode && (
+        <Flex justifyContent="center" mt={4}>
+          <Button onClick={onCancel} isDisabled={isSubmitting}>
+            Cancel
+          </Button>
+        </Flex>
+      )}
+    </Container>
   )
 }
 

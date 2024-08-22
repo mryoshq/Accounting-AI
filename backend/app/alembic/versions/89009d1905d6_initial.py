@@ -1,8 +1,8 @@
-"""Initial schema
+"""initial
 
-Revision ID: 0984f8c40ddf
+Revision ID: 89009d1905d6
 Revises: 
-Create Date: 2024-07-15 14:02:53.315083
+Create Date: 2024-08-20 15:25:30.521219
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel.sql.sqltypes
 
 
 # revision identifiers, used by Alembic.
-revision = '0984f8c40ddf'
+revision = '89009d1905d6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,6 +30,7 @@ def upgrade():
     op.create_table('project',
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -103,6 +104,17 @@ def upgrade():
     sa.ForeignKeyConstraint(['supplier_id'], ['supplier.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('task',
+    sa.Column('title', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('status', sa.Enum('To_Do', 'In_Progress', 'Done', name='taskstatus'), nullable=False),
+    sa.Column('due_date', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('part',
     sa.Column('item_code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -160,6 +172,7 @@ def downgrade():
     op.drop_table('paymenttosupplier')
     op.drop_table('paymentfromcustomer')
     op.drop_table('part')
+    op.drop_table('task')
     op.drop_table('suppliercontact')
     op.drop_table('internalinvoice')
     op.drop_table('externalinvoice')

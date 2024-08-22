@@ -20,15 +20,6 @@ import {
   AlertIcon,
   Button,
   Flex,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Grid,
 } from "@chakra-ui/react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -62,7 +53,6 @@ import {
   PaymentFromCustomerPublic
 } from "../../client";
 import type { UserPublic } from "../../client";
-import ReportingComponent from '../../components/Reporting/ReportingComponent';
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
@@ -347,7 +337,6 @@ function Dashboard() {
     );
   }
   
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Container maxW="full" p={5}>
@@ -625,40 +614,7 @@ function Dashboard() {
         </Box>
       </SimpleGrid>
 
-
       
-
-      <Flex mt={4} minHeight="600px">
-        <Box bg={bgColor} p={5} borderRadius="lg" boxShadow="lg" rounded="md" mb={10} width="100%">
-          <Grid templateColumns="1fr 2fr" gap={4} height="100%">
-            <Box>
-              <Button onClick={onOpen} colorScheme="blue" mt={4} width="100%">
-                Generate Report
-              </Button>
-            </Box>
-          </Grid>
-        </Box>
-      </Flex>
-
-
-      
-      
-
-      <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Generate Report</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <ReportingComponent />
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </Container>
   );
 }

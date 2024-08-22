@@ -66,10 +66,9 @@ function ProjectsList() {
 }
 
 function Projects() {
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
 
   return (
-    <Flex direction="column" height="100vh" width="100%" bg={bgColor}>
+    <Flex direction="column" height="100vh" width="100%" >
       <Box width="100%" p={4}>
         <Flex justifyContent="space-between" alignItems="center" mb={4} mt={3}>
           <Heading size="lg">Projects Management</Heading>

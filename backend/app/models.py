@@ -1,45 +1,48 @@
 from sqlmodel import Field, Relationship, SQLModel
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+
 ##### EXISTING CODE #####
 # Shared properties
 # TO DO replace email str with EmailStr when sqlmodel supports it
 
-# --- user models ----
+# --- User models ----
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
     is_active: bool = True
     is_superuser: bool = False
-    full_name: str | None = None
-# Properties to receive via API on creation
+    full_name: Optional[str] = None
+
 class UserCreate(UserBase):
     password: str
-# TODO replace email str with EmailStr when sqlmodel supports it
+
 class UserRegister(SQLModel):
     email: str
     password: str
-    full_name: str | None = None
-# Properties to receive via API on update, all are optional
-# TODO replace email str with EmailStr when sqlmodel supports it
+    full_name: Optional[str] = None
+
 class UserUpdate(UserBase):
-    email: str | None = None  # type: ignore
-    password: str | None = None
-# TODO replace email str with EmailStr when sqlmodel supports it
+    email: Optional[str] = None
+    password: Optional[str] = None
+
 class UserUpdateMe(SQLModel):
-    full_name: str | None = None
-    email: str | None = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+
 class UpdatePassword(SQLModel):
     current_password: str
     new_password: str
-# Database model, database table inferred from class name
+
 class User(UserBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str
-# Properties to return via API, id is always required
+    tasks: List["Task"] = Relationship(back_populates="user")
+
 class UserPublic(UserBase):
     id: int
+
 class UsersPublic(SQLModel):
-    data: list[UserPublic]
+    data: List[UserPublic]
     count: int
 
  
@@ -87,7 +90,10 @@ class PaymentStatus(str, Enum):
     Partial = "Partial"
     Failed = "Failed"
     Missing = "Missing"
-
+class TaskStatus(str, Enum):
+    To_Do = "To Do"
+    In_Progress = "In Progress"
+    Done = "Done"
 
 
 # --- supplier models ----
@@ -536,3 +542,38 @@ class ChatbotQuery(BaseModel):
     query: str
 
 
+
+
+# --- Task models ----
+
+
+
+class TaskBase(SQLModel):
+    title: str
+    description: Optional[str] = None
+    status: TaskStatus
+    due_date: Optional[str] = None
+    is_active: bool = True
+
+class TaskCreate(TaskBase):
+    pass
+
+class TaskUpdate(SQLModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[TaskStatus] = None  # Use TaskStatus type here
+    due_date: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class Task(TaskBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    user: "User" = Relationship(back_populates="tasks")  # Use forward reference for User
+
+class TaskPublic(TaskBase):
+    id: int
+    user_id: int
+
+class TasksPublic(SQLModel):
+    data: List[TaskPublic]
+    count: int

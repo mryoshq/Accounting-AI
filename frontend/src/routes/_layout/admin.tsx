@@ -89,8 +89,10 @@ const MembersBodySkeleton = () => {
 
 function Admin() {
   return (
+    
+
     <Container maxW="full">
-      <Flex  alignItems="center" mb={4} mt={7}>
+      <Flex justifyContent="space-between" alignItems="center" mb={4} mt={7}>
         <Heading size="lg" mr={20}>User Management</Heading>
         <Navbar type="User" />
       </Flex>

@@ -538,6 +538,45 @@ export type SuppliersPublic = {
 
 
 
+export type TaskCreate = {
+	title: string;
+	description?: string | null;
+	status?: string;
+	due_date?: string | null;
+	is_active?: boolean;
+};
+
+
+
+export type TaskPublic = {
+	title: string;
+	description?: string | null;
+	status?: string;
+	due_date?: string | null;
+	is_active?: boolean;
+	id: number;
+	user_id: number;
+};
+
+
+
+export type TaskUpdate = {
+	title?: string | null;
+	description?: string | null;
+	status?: string | null;
+	due_date?: string | null;
+	is_active?: boolean | null;
+};
+
+
+
+export type TasksPublic = {
+	data: Array<TaskPublic>;
+	count: number;
+};
+
+
+
 export type Token = {
 	access_token: string;
 	token_type?: string;
