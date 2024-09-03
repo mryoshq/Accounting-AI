@@ -219,13 +219,14 @@ const AddPart: React.FC<AddPartProps> = ({ isOpen, onClose, onCancel, prefillDat
             </Field>
             <Field name="project_id">
               {({ field, form }: FieldProps) => (
-                <FormControl mt={4}  isInvalid={!!(form.errors.project_id && form.touched.project_id)}>
+                <FormControl mt={4} isInvalid={!!(form.errors.project_id && form.touched.project_id)}>
                   <FormLabel htmlFor="project_id">Project</FormLabel>
                   <Select
                     {...field}
                     id="project_id"
                     placeholder="Select Project"
                     bg={isPrefilled("project_id") ? "yellow.500" : "transparent"}
+                    disabled={invoiceProcess} // Add this line
                   >
                     {projects?.data.map((project: any) => (
                       <option key={project.id} value={project.id}>

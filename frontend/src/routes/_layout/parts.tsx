@@ -416,7 +416,7 @@ function Parts() {
 
   return (
     <Container maxW="full">
-    <Flex  alignItems="center" mb={4} mt={7}>
+    <Flex  justifyContent="space-between" alignItems="center" mb={4} mt={7}>
       <Heading size="lg" mr={20}>Parts Management</Heading>
       <Navbar type="Part" />
     </Flex>

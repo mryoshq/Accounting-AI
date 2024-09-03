@@ -66,7 +66,7 @@ const TaskCard = ({ task, onEdit, onDelete }: { task: TaskPublic; onEdit: (task:
       <CardBody>
         <Flex justifyContent="space-between" alignItems="flex-start">
           <Tooltip label={task.description || "No description available"}>
-            <Text color={descriptionColor} fontSize="xs" pl={2} flex={1} noOfLines={1}>
+            <Text color={descriptionColor} fontSize="xs" pl={2} pr={5} flex={1} noOfLines={1}>
               {task.description || "No description available"}
             </Text>
           </Tooltip>
