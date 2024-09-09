@@ -10,6 +10,7 @@ import {
   Th,
   Thead,
   Tr,
+  Tag,
 } from "@chakra-ui/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -56,7 +57,11 @@ function CustomersTable() {
             <Th>ICE</Th>
             <Th>Postal Code</Th>
             <Th>RIB</Th>
-            <Th>Actions</Th>
+            <Th>
+              <Tag size={"md"} key={"md"} variant='outline' colorScheme='teal'>
+                Actions
+              </Tag>
+            </Th>
           </Tr>
         </Thead>
         <ErrorBoundary

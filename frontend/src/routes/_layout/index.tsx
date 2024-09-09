@@ -39,8 +39,6 @@ import {
   Area,
 } from 'recharts';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-
-
 import {
   ExternalInvoicesService,
   InternalInvoicesService,
@@ -132,6 +130,7 @@ function Dashboard() {
   const queryClient = useQueryClient();
   const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
   const bgColor = useColorModeValue("white", "gray.800");
+  const headerbgColor = useColorModeValue("gray.100", "gray.700");
 
   const [selectedProjectIndex, setSelectedProjectIndex] = React.useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -347,7 +346,7 @@ function Dashboard() {
         </Text>
       </Box>
 
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} p={7} spacing={6} mb={10} boxShadow='lg' rounded='md'>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} p={7} spacing={6} mb={10} boxShadow='lg' rounded='md' bg={headerbgColor}>
         <DashboardKPI 
           title="Invoices Processed" 
           metric={dashboardData.totalInvoices} 

@@ -1,11 +1,12 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef, ReactElement } from "react";
 import {
   Box,
   IconButton,
+  IconButtonProps,
   Menu,
-  MenuButton,
   MenuItem,
   MenuList,
+  MenuButton,
   useColorMode,
   useColorModeValue,
   Drawer,
@@ -34,7 +35,34 @@ import CustomerContacts from "../../routes/_layout/customercontacts";
 import ReportingComponent from "../Tools/ReportingComponent"; 
 import TasksComponent from "../Tools/TasksComponent"; 
 
-const UserMenu = () => {
+const CustomIconButton = React.forwardRef<HTMLButtonElement, IconButtonProps & { icon: ReactElement }>((props, ref) => (
+  <IconButton ref={ref} {...props} />
+));
+
+interface TooltipMenuProps {
+  label: string;
+  icon: ReactElement;
+  children: React.ReactNode;
+}
+
+const TooltipMenu: React.FC<TooltipMenuProps> = ({ label, icon, children }) => {
+  return (
+    <Menu>
+      <Tooltip label={label} hasArrow>
+        <MenuButton
+          as={CustomIconButton}
+          aria-label={label}
+          icon={icon}
+          variant="ghost"
+          color={useColorModeValue("green.500", "white")}
+        />
+      </Tooltip>
+      <MenuList>{children}</MenuList>
+    </Menu>
+  );
+};
+
+const UserMenu: React.FC = () => {
   const { logout } = useAuth();
   const auth = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
@@ -46,8 +74,6 @@ const UserMenu = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
   const chatBoxRef = useRef<ChatBoxRef>(null);
-
-
 
   const handleLogout = async () => {
     logout();
@@ -76,7 +102,6 @@ const UserMenu = () => {
     setHasMessages(newHasMessages);
   };
 
-
   const chatIcon = isMinimized && hasMessages ? (
     <Box position="relative">
       <FaRegCommentDots />
@@ -94,176 +119,121 @@ const UserMenu = () => {
     <FaRegCommentDots />
   );
 
-  const ReportingWrapper = () => {
-    return (
-      <>
-        <MenuItem icon={<FaChartBar fontSize="18px" />} onClick={onReportingOpen}>
-          Reporting
-        </MenuItem>
-        <Drawer placement="bottom" onClose={onReportingClose} isOpen={isReportingOpen} size="xl">
-          <DrawerOverlay />
-          <DrawerContent>
-            <DrawerCloseButton />
-            <DrawerHeader borderBottomWidth='1px'>Generate Report</DrawerHeader>
-            <DrawerBody>
-              <ReportingComponent auth={auth} />
-            </DrawerBody>
-          </DrawerContent>
-        </Drawer>
-      </>
-    );
-  };
+  const ReportingWrapper = () => (
+    <MenuItem icon={<FaChartBar fontSize="18px" />} onClick={onReportingOpen}>
+      Reporting
+    </MenuItem>
+  );
 
-  const TasksWrapper = () => {
-    return (
-      <>
-        <MenuItem icon={<FaTasks fontSize="18px" />} onClick={onTasksOpen}>
-          Tasks
-        </MenuItem>
-        <Drawer placement="top" onClose={onTasksClose} isOpen={isTasksOpen} size="xl">
-          <DrawerOverlay />
-          <DrawerContent>
-            <DrawerCloseButton />
-            <DrawerHeader borderBottomWidth='1px'>Tasks</DrawerHeader>
-            <DrawerBody pt={0}>
-              <TasksComponent />
-            </DrawerBody>
-          </DrawerContent>
-        </Drawer>
-      </>
-    );
-  };
-
+  const TasksWrapper = () => (
+    <MenuItem icon={<FaTasks fontSize="18px" />} onClick={onTasksOpen}>
+      Tasks
+    </MenuItem>
+  );
 
   return (
     <>
       {/* Desktop */}
-      <Box display={{ base: "none", md: "flex" }} position="fixed" top={4} right={4} alignItems="center">
-        <IconButton
-          aria-label="Toggle Color Mode"
-          icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
-          onClick={toggleColorMode}
-          mr={2}
-          variant="ghost"
-          color={iconColor}
-        />
-
-        <IconButton
-          aria-label="Stakeholders Contacts"
-          icon={<FaPhoneSquare />}
-          onClick={onContactsOpen}
-          variant="ghost"
-          color={iconColor}
-          mr={2}
-        />
-
-        <IconButton
-          aria-label="Chat bot"
-          icon={chatIcon}
-          mr={2}
-          variant="ghost"
-          color={iconColor}
-          onClick={handleChatOpen}
-        />
-
-
-
-        <Menu>
-          <MenuButton
-            as={IconButton}
-            aria-label="Tools"
-            icon={<FaTools />}
-            bg="transparent"
-            _hover={{ bg: "transparent" }}
-            _active={{ bg: "transparent" }}
-            isRound
+      <Box display={{ base: "none", md: "flex" }} position="fixed" top={4} right={4} alignItems="center" zIndex={1000}>
+        <Tooltip label={`Switch to ${colorMode === "light" ? "Dark" : "Light"} Mode`} hasArrow>
+          <CustomIconButton
+            aria-label="Toggle Color Mode"
+            icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
+            onClick={toggleColorMode}
+            mr={2}
+            variant="ghost"
             color={iconColor}
           />
-          <MenuList>
-            <TasksWrapper />
-            <ReportingWrapper />
-          </MenuList>
-        </Menu>
+        </Tooltip>
 
-        <Menu>
-          <MenuButton
-            as={IconButton}
-            aria-label="User Options"
-            icon={<FaBars />}
-            bg="transparent"
-            _hover={{ bg: "transparent" }}
-            _active={{ bg: "transparent" }}
-            isRound
+        <Tooltip label="Contacts" hasArrow>
+          <CustomIconButton
+            aria-label="Stakeholders Contacts"
+            icon={<FaPhoneSquare />}
+            onClick={onContactsOpen}
+            variant="ghost"
             color={iconColor}
-           />
-          <MenuList>
-            <MenuItem icon={<FiUser fontSize="18px" />} as={Link} to="settings">
-              My profile
-            </MenuItem>
-            <MenuItem
-              icon={<FiLogOut fontSize="18px" />}
-              onClick={handleLogout}
-              color="ui.danger"
-              fontWeight="bold"
-            >
-              Log out
-            </MenuItem>
-          </MenuList>
-        </Menu>
+            mr={2}
+          />
+        </Tooltip>
+
+        <Tooltip label="ChatBot" hasArrow>
+          <CustomIconButton
+            aria-label="Chat bot"
+            icon={chatIcon}
+            mr={2}
+            variant="ghost"
+            color={iconColor}
+            onClick={handleChatOpen}
+          />
+        </Tooltip>
+
+        <TooltipMenu label="Tools" icon={<FaTools />}>
+          <TasksWrapper />
+          <ReportingWrapper />
+        </TooltipMenu>
+
+        <TooltipMenu label="User Options" icon={<FaBars />}>
+          <MenuItem icon={<FiUser fontSize="18px" />} as={Link} to="/settings">
+            My profile
+          </MenuItem>
+          <MenuItem
+            icon={<FiLogOut fontSize="18px" />}
+            onClick={handleLogout}
+            color="ui.danger"
+            fontWeight="bold"
+          >
+            Log out
+          </MenuItem>
+        </TooltipMenu>
       </Box>
 
       {/* Mobile */}
       <Box display={{ base: "flex", md: "none" }} position="fixed" bottom={4} right={4} alignItems="center">
-        <IconButton
-          aria-label="Toggle Color Mode"
-          icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
-          onClick={toggleColorMode}
-          mr={2}
-          variant="ghost"
-          color={iconColor}
-        />
-        <IconButton
-          aria-label="Chat bot"
-          icon={chatIcon}
-          mr={2}
-          variant="ghost"
-          color={iconColor}
-          onClick={handleChatOpen}
-        />
-        <IconButton
-          aria-label="Stakeholders Contacts"
-          icon={<FaPhoneSquare />}
-          onClick={onContactsOpen}
-          variant="ghost"
-          color={iconColor}
-          mr={2}
-        />
-        <Menu>
-          <MenuButton
-            as={IconButton}
-            aria-label="User Options"
-            icon={<FaBars />}
-            bg="transparent"
-            _hover={{ bg: "transparent" }}
-            _active={{ bg: "transparent" }}
-            isRound
+        <Tooltip label={`Switch to ${colorMode === "light" ? "Dark" : "Light"} Mode`} hasArrow>
+          <CustomIconButton
+            aria-label="Toggle Color Mode"
+            icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
+            onClick={toggleColorMode}
+            mr={2}
+            variant="ghost"
             color={iconColor}
           />
-          <MenuList>
-            <MenuItem icon={<FiUser fontSize="18px" />} as={Link} to="settings">
-              My profile
-            </MenuItem>
-            <ReportingWrapper />
-            <MenuItem
-              icon={<FiLogOut fontSize="18px" />}
-              onClick={handleLogout}
-              color="ui.danger"
-              fontWeight="bold"
-            >
-              Log out
-            </MenuItem>
-          </MenuList>
-        </Menu>
+        </Tooltip>
+        <Tooltip label="Open Chat Bot" hasArrow>
+          <CustomIconButton
+            aria-label="Chat bot"
+            icon={chatIcon}
+            mr={2}
+            variant="ghost"
+            color={iconColor}
+            onClick={handleChatOpen}
+          />
+        </Tooltip>
+        <Tooltip label="View Stakeholder Contacts" hasArrow>
+          <CustomIconButton
+            aria-label="Stakeholders Contacts"
+            icon={<FaPhoneSquare />}
+            onClick={onContactsOpen}
+            variant="ghost"
+            color={iconColor}
+            mr={2}
+          />
+        </Tooltip>
+        <TooltipMenu label="User Options" icon={<FaBars />}>
+          <MenuItem icon={<FiUser fontSize="18px" />} as={Link} to="/settings">
+            My profile
+          </MenuItem>
+          <ReportingWrapper />
+          <MenuItem
+            icon={<FiLogOut fontSize="18px" />}
+            onClick={handleLogout}
+            color="ui.danger"
+            fontWeight="bold"
+          >
+            Log out
+          </MenuItem>
+        </TooltipMenu>
       </Box>
 
       {/* ChatBox Drawer */}
@@ -280,7 +250,7 @@ const UserMenu = () => {
               <Text>ChatBot</Text>
               <HStack>
                 <Tooltip label={hasMessages ? "Minimize" : "Chat is empty"}>
-                  <IconButton
+                  <CustomIconButton
                     aria-label="Minimize"
                     icon={<FaMinus />}
                     size="sm"
@@ -331,6 +301,30 @@ const UserMenu = () => {
                 </TabPanel>
               </TabPanels>
             </Tabs>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Reporting Drawer */}
+      <Drawer placement="bottom" onClose={onReportingClose} isOpen={isReportingOpen} size="xl">
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth='1px'>Generate Report</DrawerHeader>
+          <DrawerBody>
+            <ReportingComponent auth={auth} />
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Tasks Drawer */}
+      <Drawer placement="top" onClose={onTasksClose} isOpen={isTasksOpen} size="xl">
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth='1px'>Tasks</DrawerHeader>
+          <DrawerBody pt={0}>
+            <TasksComponent />
           </DrawerBody>
         </DrawerContent>
       </Drawer>

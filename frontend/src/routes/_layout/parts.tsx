@@ -13,6 +13,11 @@ import {
   Button,
   Flex,
   useToast,
+  IconButton,
+  Tooltip,
+  HStack,
+  useColorModeValue,
+  Tag
 } from "@chakra-ui/react";
 import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -20,6 +25,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { PartsService, type PartPublic, type PartUpdate, type PartCreate, ProjectsService, ExternalInvoicesService, SuppliersService } from "../../client";
 import ActionsMenu from "../../components/Common/ActionsMenu";
 import Navbar from "../../components/Common/Navbar";
+import { TriangleDownIcon, TriangleUpIcon, ArrowUpDownIcon } from '@chakra-ui/icons';
 
 const LazyFilterDropdown = lazy(() => import("../../components/Common/FilterDropdown"));
 const LazySplitModal = lazy(() => import("../../components/Parts/SplitModal"));
@@ -28,12 +34,17 @@ export const Route = createFileRoute("/_layout/parts")({
   component: Parts,
 });
 
+type SortDirection = 'asc' | 'desc' | null;
+
 interface PartsTableBodyProps {
   projectFilter: string;
   invoiceFilter: string;
   supplierFilter: string;
   onSplitPart: (part: PartPublic, moving: boolean) => void;
   onDeletePart: (partId: number) => void;
+  quantitySort: SortDirection;
+  unitPriceSort: SortDirection;
+  amountSort: SortDirection;
 }
 
 function PartsTableBody({
@@ -42,6 +53,9 @@ function PartsTableBody({
   supplierFilter,
   onSplitPart,
   onDeletePart,
+  quantitySort,
+  unitPriceSort,
+  amountSort,
 }: PartsTableBodyProps) {
   const [hoveredPart, setHoveredPart] = useState<number | null>(null);
 
@@ -80,12 +94,32 @@ function PartsTableBody({
     return suppliers.data.find((supplier: any) => supplier.id === supplierId)?.name || "Unknown";
   };
 
-  const filteredParts = parts.data.filter((part: PartPublic) => {
+  let filteredParts = parts.data.filter((part: PartPublic) => {
     const projectMatch = projectFilter ? getProjectName(part.project_id) === projectFilter : true;
     const invoiceMatch = invoiceFilter ? getExternalInvoiceReference(part.external_invoice_id) === invoiceFilter : true;
     const supplierMatch = supplierFilter ? getSupplierName(part.supplier_id) === supplierFilter : true;
     return projectMatch && invoiceMatch && supplierMatch;
   });
+
+  if (quantitySort) {
+    filteredParts.sort((a, b) => {
+      const quantityA = a.quantity ?? 0;
+      const quantityB = b.quantity ?? 0;
+      return quantitySort === 'asc' ? quantityA - quantityB : quantityB - quantityA;
+    });
+  } else if (unitPriceSort) {
+    filteredParts.sort((a, b) => {
+      const priceA = a.unit_price ?? 0;
+      const priceB = b.unit_price ?? 0;
+      return unitPriceSort === 'asc' ? priceA - priceB : priceB - priceA;
+    });
+  } else if (amountSort) {
+    filteredParts.sort((a, b) => {
+      const amountA = a.amount ?? 0;
+      const amountB = b.amount ?? 0;
+      return amountSort === 'asc' ? amountA - amountB : amountB - amountA;
+    });
+  }
 
   return (
     <>
@@ -155,8 +189,6 @@ function PartsTableBody({
   );
 }
 
-
-
 interface PartsTableProps {
   projectFilter: string;
   invoiceFilter: string;
@@ -166,8 +198,13 @@ interface PartsTableProps {
   onSupplierFilterSelect: (option: string) => void;
   onSplitPart: (part: PartPublic, moving: boolean) => void;
   onDeletePart: (partId: number) => void;
+  quantitySort: SortDirection;
+  unitPriceSort: SortDirection;
+  amountSort: SortDirection;
+  onQuantitySortToggle: () => void;
+  onUnitPriceSortToggle: () => void;
+  onAmountSortToggle: () => void;
 }
-
 
 function PartsTable({
   projectFilter,
@@ -178,8 +215,13 @@ function PartsTable({
   onSupplierFilterSelect,
   onSplitPart,
   onDeletePart,
+  quantitySort,
+  unitPriceSort,
+  amountSort,
+  onQuantitySortToggle,
+  onUnitPriceSortToggle,
+  onAmountSortToggle,
 }: PartsTableProps) {
-
   const fetchProjectOptions = async () => {
     const projects = await ProjectsService.readProjects();
     return projects.data.map((project: any) => project.name);
@@ -195,6 +237,25 @@ function PartsTable({
     return suppliers.data.map((supplier: any) => supplier.name);
   };
 
+  const bgColor = useColorModeValue("gray.100", "gray.700");
+  const hoverBgColor = useColorModeValue("gray.200", "gray.600");
+  const activeBgColor = useColorModeValue("gray.300", "gray.500");
+
+  const SortButton = ({ sort, onClick, label }: { sort: SortDirection; onClick: () => void; label: string }) => (
+    <Tooltip label={`Sort by ${label}`}>
+      <IconButton
+        aria-label={`Sort by ${label}`}
+        icon={sort === 'asc' ? <TriangleUpIcon /> : sort === 'desc' ? <TriangleDownIcon /> : <ArrowUpDownIcon />}
+        size="xs"
+        onClick={onClick}
+        ml={2}
+        bg={bgColor}
+        _hover={{ bg: hoverBgColor }}
+        _active={{ bg: activeBgColor }}
+      />
+    </Tooltip>
+  );
+
   return (
     <TableContainer>
       <Table size={{ base: "sm", md: "md" }}>
@@ -202,9 +263,36 @@ function PartsTable({
           <Tr>
             <Th>Item Code</Th>
             <Th>Description</Th>
-            <Th>Quantity</Th>
-            <Th>Unit Price</Th>
-            <Th>Amount</Th>
+            <Th>
+              <HStack>
+                <span>Quantity</span>
+                <SortButton
+                  sort={quantitySort}
+                  onClick={onQuantitySortToggle}
+                  label="quantity"
+                />
+              </HStack>
+            </Th>
+            <Th>
+              <HStack>
+                <span>Unit Price</span>
+                <SortButton
+                  sort={unitPriceSort}
+                  onClick={onUnitPriceSortToggle}
+                  label="unit price"
+                />
+              </HStack>
+            </Th>
+            <Th>
+              <HStack>
+                <span>Amount</span>
+                <SortButton
+                  sort={amountSort}
+                  onClick={onAmountSortToggle}
+                  label="amount"
+                />
+              </HStack>
+            </Th>
             <Th>
               Project
               <Suspense fallback={<div>Loading...</div>}>
@@ -235,7 +323,11 @@ function PartsTable({
                 />
               </Suspense>
             </Th>
-            <Th>Actions</Th>
+            <Th>
+              <Tag size={"md"} key={"md"} variant='outline' colorScheme='teal'>
+              Actions
+              </Tag>
+            </Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -267,6 +359,9 @@ function PartsTable({
                 supplierFilter={supplierFilter}
                 onSplitPart={onSplitPart}
                 onDeletePart={onDeletePart}
+                quantitySort={quantitySort}
+                unitPriceSort={unitPriceSort}
+                amountSort={amountSort}
               />
             </Suspense>
           </ErrorBoundary>
@@ -276,7 +371,6 @@ function PartsTable({
   );
 }
 
-
 function Parts() {
   const [projectFilter, setProjectFilter] = useState("");
   const [invoiceFilter, setInvoiceFilter] = useState("");
@@ -284,12 +378,41 @@ function Parts() {
   const [splitModalOpen, setSplitModalOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<PartPublic | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [quantitySort, setQuantitySort] = useState<SortDirection>(null);
+  const [unitPriceSort, setUnitPriceSort] = useState<SortDirection>(null);
+  const [amountSort, setAmountSort] = useState<SortDirection>(null);
   const queryClient = useQueryClient();
   const toast = useToast();
 
   const handleProjectFilterSelect = (option: string) => setProjectFilter(option);
   const handleInvoiceFilterSelect = (option: string) => setInvoiceFilter(option);
   const handleSupplierFilterSelect = (option: string) => setSupplierFilter(option);
+
+  const toggleSort = (setter: React.Dispatch<React.SetStateAction<SortDirection>>) => {
+    setter(current => {
+      if (current === 'asc') return 'desc';
+      if (current === 'desc') return null;
+      return 'asc';
+    });
+  };
+
+  const handleQuantitySortToggle = () => {
+    toggleSort(setQuantitySort);
+    setUnitPriceSort(null);
+    setAmountSort(null);
+  };
+
+  const handleUnitPriceSortToggle = () => {
+    toggleSort(setUnitPriceSort);
+    setQuantitySort(null);
+    setAmountSort(null);
+  };
+
+  const handleAmountSortToggle = () => {
+    toggleSort(setAmountSort);
+    setQuantitySort(null);
+    setUnitPriceSort(null);
+  };
 
   const updatePartMutation = useMutation({
     mutationFn: ({ id, updates }: { id: number; updates: PartUpdate }) => 
@@ -416,10 +539,10 @@ function Parts() {
 
   return (
     <Container maxW="full">
-    <Flex  justifyContent="space-between" alignItems="center" mb={4} mt={7}>
-      <Heading size="lg" mr={20}>Parts Management</Heading>
-      <Navbar type="Part" />
-    </Flex>
+      <Flex justifyContent="space-between" alignItems="center" mb={4} mt={7}>
+        <Heading size="lg" mr={20}>Parts Management</Heading>
+        <Navbar type="Part" />
+      </Flex>
 
       <PartsTable
         projectFilter={projectFilter}
@@ -430,6 +553,12 @@ function Parts() {
         onSupplierFilterSelect={handleSupplierFilterSelect}
         onSplitPart={handleSplitPart}
         onDeletePart={handleDeletePart}
+        quantitySort={quantitySort}
+        unitPriceSort={unitPriceSort}
+        amountSort={amountSort}
+        onQuantitySortToggle={handleQuantitySortToggle}
+        onUnitPriceSortToggle={handleUnitPriceSortToggle}
+        onAmountSortToggle={handleAmountSortToggle}
       />
 
       <Suspense fallback={<div>Loading...</div>}>

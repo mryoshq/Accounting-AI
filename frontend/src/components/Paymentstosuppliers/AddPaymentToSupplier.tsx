@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Button,
   FormControl,
@@ -28,7 +29,7 @@ interface AddPaymentToSupplierProps {
   onClose: () => void;
 }
 
-const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) => {
+const AddPaymentToSupplier: React.FC<AddPaymentToSupplierProps> = ({ isOpen, onClose }) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   
@@ -41,6 +42,7 @@ const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) =>
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<PaymentToSupplierCreate>({
     mode: "onBlur",
@@ -48,14 +50,16 @@ const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) =>
     defaultValues: {
       payment_status: "Paid",
       payment_mode: "Cash",
-      amount: null,
-      remaining: null,
+      amount: 0,
+      remaining: 0,
       disbursement_date: "",
       payment_ref: "",
-      additional_fees: null,
+      additional_fees: 0,
       external_invoice_id: 0,
     },
   });
+
+  const amount = watch("amount");
 
   const mutation = useMutation({
     mutationFn: (data: PaymentToSupplierCreate) =>
@@ -70,24 +74,13 @@ const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) =>
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ["paymentosuppliers"] });
-      queryClient.refetchQueries({ queryKey: ["paymenttosuppliers"] });
+      queryClient.invalidateQueries({ queryKey: ["paymenttosuppliers"] });
     },
   });
 
-  const transformEmptyStringToNull = (value: any) => (value === "" ? null : value);
-
   const onSubmit: SubmitHandler<PaymentToSupplierCreate> = (data) => {
-    const transformedData = {
-      ...data,
-      amount: transformEmptyStringToNull(data.amount),
-      remaining: transformEmptyStringToNull(data.remaining),
-      additional_fees: transformEmptyStringToNull(data.additional_fees),
-    };
-    mutation.mutate(transformedData);
+    mutation.mutate(data);
   };
-
 
   return (
     <Modal
@@ -152,6 +145,8 @@ const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) =>
               id="amount"
               {...register("amount", {
                 required: "Amount is required.",
+                valueAsNumber: true,
+                min: { value: 0, message: "Amount must be positive" }
               })}
               placeholder="Amount"
               type="number"
@@ -160,11 +155,18 @@ const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) =>
             <FormErrorMessage>{errors.amount?.message}</FormErrorMessage>
           </FormControl>
           <FormControl mt={4} isRequired isInvalid={!!errors.remaining}>
-            <FormLabel htmlFor="remaining">Remaining Amount</FormLabel>
+            <FormLabel htmlFor="remaining">Remaining</FormLabel>
             <Input
               id="remaining"
               {...register("remaining", {
                 required: "Remaining Amount is required.",
+                valueAsNumber: true,
+                validate: (value): string | boolean => {
+                  if (typeof value !== 'number' || typeof amount !== 'number') {
+                    return "Invalid input";
+                  }
+                  return value <= amount || "Remaining amount must be less than or equal to the total amount";
+                }
               })}
               placeholder="Remaining Amount"
               type="number"
@@ -188,7 +190,10 @@ const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) =>
             <FormLabel htmlFor="additional_fees">Additional Fees</FormLabel>
             <Input
               id="additional_fees"
-              {...register("additional_fees")}
+              {...register("additional_fees", {
+                valueAsNumber: true,
+                min: { value: 0, message: "Additional fees must be positive or zero" }
+              })}
               placeholder="Additional Fees"
               type="number"
               step="0.01"
@@ -201,6 +206,7 @@ const AddPaymentToSupplier = ({ isOpen, onClose }: AddPaymentToSupplierProps) =>
               id="external_invoice_id"
               {...register("external_invoice_id", {
                 required: "External Invoice is required.",
+                valueAsNumber: true,
               })}
               placeholder="Select External Invoice"
             >

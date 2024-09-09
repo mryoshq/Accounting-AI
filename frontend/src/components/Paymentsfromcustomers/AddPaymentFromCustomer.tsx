@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Button,
   FormControl,
@@ -28,7 +29,7 @@ interface AddPaymentFromCustomerProps {
   onClose: () => void;
 }
 
-const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps) => {
+const AddPaymentFromCustomer: React.FC<AddPaymentFromCustomerProps> = ({ isOpen, onClose }) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
@@ -41,6 +42,7 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<PaymentFromCustomerCreate>({
     mode: "onBlur",
@@ -48,14 +50,16 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
     defaultValues: {
       payment_status: "Pending",
       payment_mode: "Cash",
-      amount: null,
-      remaining: null,
+      amount: 0,
+      remaining: 0,
       disbursement_date: "",
       payment_ref: "",
-      additional_fees: null,
+      additional_fees: 0,
       internal_invoice_id: 0,
     },
   });
+
+  const amount = watch("amount");
 
   const mutation = useMutation({
     mutationFn: (data: PaymentFromCustomerCreate) =>
@@ -74,16 +78,8 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
     },
   });
 
-  const transformEmptyStringToNull = (value: any) => (value === "" ? null : value);
-
   const onSubmit: SubmitHandler<PaymentFromCustomerCreate> = (data) => {
-    const transformedData = {
-      ...data,
-      amount: transformEmptyStringToNull(data.amount),
-      remaining: transformEmptyStringToNull(data.remaining),
-      additional_fees: transformEmptyStringToNull(data.additional_fees),
-    };
-    mutation.mutate(transformedData);
+    mutation.mutate(data);
   };
 
   return (
@@ -143,14 +139,17 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
             </Select>
             <FormErrorMessage>{errors.payment_mode?.message}</FormErrorMessage>
           </FormControl>
+
           <FormControl mt={4} isRequired isInvalid={!!errors.amount}>
             <FormLabel htmlFor="amount">Amount</FormLabel>
             <Input
               id="amount"
               {...register("amount", {
                 required: "Amount is required.",
+                valueAsNumber: true,
+                min: { value: 0, message: "Amount must be positive" }
               })}
-              placeholder="Amount (MAD)"
+              placeholder="Amount"
               type="number"
               step="0.01"
             />
@@ -162,6 +161,13 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
               id="remaining"
               {...register("remaining", {
                 required: "Remaining Amount is required.",
+                valueAsNumber: true,
+                validate: (value): string | boolean => {
+                  if (typeof value !== 'number' || typeof amount !== 'number') {
+                    return "Invalid input";
+                  }
+                  return value <= amount || "Remaining amount must be less than or equal to the total amount";
+                }
               })}
               placeholder="Remaining Amount"
               type="number"
@@ -169,6 +175,9 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
             />
             <FormErrorMessage>{errors.remaining?.message}</FormErrorMessage>
           </FormControl>
+
+
+
           <FormControl mt={4} isRequired isInvalid={!!errors.disbursement_date}>
             <FormLabel htmlFor="disbursement_date">Disbursement Date</FormLabel>
             <Input
@@ -185,7 +194,10 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
             <FormLabel htmlFor="additional_fees">Additional Fees</FormLabel>
             <Input
               id="additional_fees"
-              {...register("additional_fees")}
+              {...register("additional_fees", {
+                valueAsNumber: true,
+                min: { value: 0, message: "Additional fees must be positive or zero" }
+              })}
               placeholder="Additional Fees"
               type="number"
               step="0.01"
@@ -198,6 +210,7 @@ const AddPaymentFromCustomer = ({ isOpen, onClose }: AddPaymentFromCustomerProps
               id="internal_invoice_id"
               {...register("internal_invoice_id", {
                 required: "Internal Invoice is required.",
+                valueAsNumber: true,
               })}
               placeholder="Select Internal Invoice"
             >

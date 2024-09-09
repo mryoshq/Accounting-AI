@@ -11,6 +11,7 @@ import {
   Th,
   Thead,
   Tr,
+  Tag,
   IconButton,
   Tooltip,
   HStack,
@@ -220,9 +221,9 @@ function PaymentsFromCustomersTable({
       <Table size={{ base: "sm", md: "md" }}>
         <Thead>
           <Tr>
-            <Th>Payment Ref</Th>
+            <Th>Reference</Th>
             <Th>
-              Payment Status
+              Status
               <Suspense fallback={<div>Loading...</div>}>
                 <LazyFilterDropdown
                   fetchData={fetchPaymentStatusOptions}
@@ -232,7 +233,7 @@ function PaymentsFromCustomersTable({
               </Suspense>
             </Th>
             <Th>
-              Payment Mode
+              Mode
               <Suspense fallback={<div>Loading...</div>}>
                 <LazyFilterDropdown
                   fetchData={fetchPaymentModeOptions}
@@ -302,7 +303,11 @@ function PaymentsFromCustomersTable({
                 />
               </Suspense>
             </Th>
-            <Th>Actions</Th>
+            <Th>
+              <Tag size={"md"} key={"md"} variant='outline' colorScheme='teal'>
+              Actions
+              </Tag>
+            </Th>
           </Tr>
         </Thead>
         <ErrorBoundary
