@@ -12,6 +12,7 @@ import {
   Th,
   Thead,
   Tr,
+  Switch,
 } from "@chakra-ui/react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
@@ -61,6 +62,18 @@ const MembersTableBody = () => {
             </Flex>
           </Td>
           <Td>
+            <Flex gap={2}>
+              <Box
+                w="2"
+                h="2"
+                borderRadius="50%"
+                bg={user.api_token_enabled ? "ui.success" : "ui.danger"}
+                alignSelf="center"
+              />
+              {user.api_token_enabled ? "Active" : "Inactive"}
+            </Flex>
+          </Td>
+          <Td>
             <ActionsMenu
               type="User"
               value={user}
@@ -77,7 +90,7 @@ const MembersBodySkeleton = () => {
   return (
     <Tbody>
       <Tr>
-        {new Array(5).fill(null).map((_, index) => (
+        {new Array(6).fill(null).map((_, index) => (
           <Td key={index}>
             <SkeletonText noOfLines={1} paddingBlock="16px" />
           </Td>
@@ -89,8 +102,6 @@ const MembersBodySkeleton = () => {
 
 function Admin() {
   return (
-    
-
     <Container maxW="full">
       <Flex justifyContent="space-between" alignItems="center" mb={4} mt={7}>
         <Heading size="lg" mr={20}>User Management</Heading>
@@ -101,10 +112,11 @@ function Admin() {
           <Thead>
             <Tr>
               <Th width="20%">Full name</Th>
-              <Th width="50%">Email</Th>
+              <Th width="30%">Email</Th>
               <Th width="10%">Role</Th>
               <Th width="10%">Status</Th>
-              <Th width="10%">Actions</Th>
+              <Th width="15%">API Token Enabled</Th>
+              <Th width="15%">Actions</Th>
             </Tr>
           </Thead>
           <Suspense fallback={<MembersBodySkeleton />}>

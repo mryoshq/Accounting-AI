@@ -159,6 +159,11 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
                 </Checkbox>
               </FormControl>
             </Flex>
+            <FormControl mt={4}>
+              <Checkbox {...register("api_token_enabled")} colorScheme="teal">
+                Enable API Token?
+              </Checkbox>
+            </FormControl>
           </ModalBody>
 
           <ModalFooter gap={3}>

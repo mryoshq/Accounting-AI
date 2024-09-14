@@ -13,9 +13,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ChatbotManager:
-    def __init__(self):
+    def __init__(self, user_id: int):
         self.agent = None
-        self.api_key: str = load_env()
+        self.api_key: str = load_env(user_id)
         self.chat_history: List[Dict[str, Any]] = []
         self.base_url: str = "http://localhost"  # Update this with your actual base URL
         self.allow_dangerous_requests: bool = True  # Set this to True to allow dangerous requests
@@ -96,8 +96,9 @@ class ChatbotManager:
             requests_wrapper = RequestsWrapper(headers=headers)
 
             # Initialize LLM
-            llm = ChatOpenAI(model_name="gpt-4", temperature=0.0)
+            llm = ChatOpenAI(api_key=self.api_key, model_name="gpt-4", temperature=0.0)
             logger.info("Language model initialized")
+
 
             # Create the agent
             self.agent = planner.create_openapi_agent(
@@ -160,9 +161,16 @@ class ChatbotManager:
         except ValueError:
             return response.text
 
-chatbot_manager = ChatbotManager()
-
-def process_query(query: str) -> str:
-    return chatbot_manager.process_query(query)
 
 
+chatbot_manager = None
+
+def get_chatbot_manager(user_id: int) -> ChatbotManager:
+    global chatbot_manager
+    if chatbot_manager is None or chatbot_manager.user_id != user_id:
+        chatbot_manager = ChatbotManager(user_id)
+    return chatbot_manager
+
+def process_query(query: str, user_id: int) -> str:
+    manager = get_chatbot_manager(user_id)
+    return manager.process_query(query)

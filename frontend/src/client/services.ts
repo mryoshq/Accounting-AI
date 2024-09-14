@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ChatbotQuery,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse,TaskCreate,TaskPublic,TasksPublic,TaskUpdate } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,ApiTokenCreate,ApiTokenResponse,FullApiTokenResponse,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ChatbotQuery,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse,TaskCreate,TaskPublic,TasksPublic,TaskUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -156,6 +156,10 @@ userId: number
             }
 export type TDataDeleteUser = {
                 userId: number
+                
+            }
+export type TDataCreateApiToken = {
+                requestBody: ApiTokenCreate
                 
             }
 
@@ -360,6 +364,67 @@ userId,
 			errors: {
 				422: `Validation Error`,
 			},
+		});
+	}
+
+	/**
+	 * Create Api Token
+	 * Create or refresh API token for the current user.
+	 * @returns ApiTokenResponse Successful Response
+	 * @throws ApiError
+	 */
+	public static createApiToken(data: TDataCreateApiToken): CancelablePromise<ApiTokenResponse> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/users/me/api-token',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Api Token
+	 * Delete the API token for the current user.
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteApiToken(): CancelablePromise<Message> {
+				return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/users/me/api-token',
+		});
+	}
+
+	/**
+	 * Get Api Token Preview
+	 * Retrieve partial information about the current user's API token for frontend use.
+	 * @returns ApiTokenResponse Successful Response
+	 * @throws ApiError
+	 */
+	public static getApiTokenPreview(): CancelablePromise<ApiTokenResponse> {
+				return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/users/me/api-token-preview',
+		});
+	}
+
+	/**
+	 * Get Full Api Token
+	 * Retrieve the full decrypted API token for internal use.
+ * This endpoint should only be accessible by the backend services.
+	 * @returns FullApiTokenResponse Successful Response
+	 * @throws ApiError
+	 */
+	public static getFullApiToken(): CancelablePromise<FullApiTokenResponse> {
+				return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/users/internal/full-api-token',
 		});
 	}
 

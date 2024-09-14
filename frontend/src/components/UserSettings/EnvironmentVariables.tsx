@@ -13,23 +13,55 @@ import {
   VStack,
   useColorModeValue,
   Tag,
+  Alert,
+  AlertIcon,
+  Center,
 } from "@chakra-ui/react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import useCustomToast from "../../hooks/useCustomToast";
-import { UserPublic } from "../../client";
+import { UserPublic, UsersService, ApiTokenResponse, Message, TDataCreateApiToken } from "../../client";
 
 interface FormData {
   password: string;
   newToken?: string;
 }
 
+const TokenDisplay: React.FC<{ tokenData: ApiTokenResponse | null }> = ({ tokenData }) => {
+  const bgColor = useColorModeValue("gray.100", "gray.700");
+  const borderColor = useColorModeValue("gray.300", "gray.600");
+
+  return (
+    <Center>
+      <Box 
+        bg={bgColor} 
+        borderWidth={1} 
+        borderColor={borderColor} 
+        borderRadius="md" 
+        p={4} 
+        minWidth="500px"
+      >
+        <Text textAlign={"left"} fontWeight="bold" mb={2}>Current Token:</Text>
+        <Text textAlign={"center"}>
+        <Tag size="lg" variant="outline" colorScheme={tokenData?.is_active ? "green" : "red"}>
+          {tokenData ? tokenData.token_preview : "No token set"}
+        </Tag>
+          </Text>
+        {tokenData && tokenData.created_at && (
+          <Text textAlign={"right"} mt={2} fontSize="xs" color={"gray"}>
+            Created: {new Date(tokenData.created_at).toLocaleString()}
+          </Text>
+        )}
+      </Box>
+    </Center>
+  );
+};
+
 const EnvironmentVariables: React.FC = () => {
   const color = useColorModeValue("inherit", "ui.light");
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
   const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
-  const [token, setToken] = useState<string | null>(null); // This should be fetched from the backend in a real scenario
   const [isCreatingOrUpdating, setIsCreatingOrUpdating] = useState(false);
 
   const {
@@ -42,115 +74,128 @@ const EnvironmentVariables: React.FC = () => {
     criteriaMode: "all",
   });
 
-  const validatePassword = async (password: string) => {
-    // This is where you would verify the password with the backend
-    // For now, we'll just simulate a password check
-    return password === "password";
-  };
+  const { data: tokenData, refetch: refetchToken } = useQuery<ApiTokenResponse | null>({
+    queryKey: ["apiToken"],
+    queryFn: () => UsersService.getApiTokenPreview(),
+    enabled: !!currentUser?.is_superuser,
+    retry: false,
+  });
 
-  const createOrUpdateToken = (newToken: string) => {
-    // This is a mock function. Replace with actual API call when backend is ready.
-    setToken(newToken);
-    showToast("Success!", "API Token created/updated.", "success");
-  };
+  const createTokenMutation = useMutation<ApiTokenResponse, Error, TDataCreateApiToken>({
+    mutationFn: (data) => UsersService.createApiToken(data),
+    onSuccess: () => {
+      showToast("Success!", "API Token created/updated.", "success");
+      refetchToken();
+    },
+    onError: (error: Error) => {
+      showToast("Error!", error.message || "Failed to create/update token.", "error");
+    },
+  });
 
-  const deleteToken = () => {
-    // This is a mock function. Replace with actual API call when backend is ready.
-    setToken(null);
-    showToast("Success!", "API Token deleted.", "success");
-  };
+  const deleteTokenMutation = useMutation<Message, Error, void>({
+    mutationFn: () => UsersService.deleteApiToken(),
+    onSuccess: () => {
+      showToast("Success!", "API Token deleted.", "success");
+      queryClient.setQueryData<ApiTokenResponse | null>(["apiToken"], null);
+    },
+    onError: (error: Error) => {
+      showToast("Error!", error.message || "Failed to delete token.", "error");
+    },
+  });
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     if (isSubmitting) return;
 
     try {
-      const isPasswordValid = await validatePassword(data.password);
-      if (!isPasswordValid) {
-        showToast("Error!", "Incorrect password.", "error");
-        return;
-      }
-
       if (isCreatingOrUpdating) {
         if (!data.newToken) {
           showToast("Error!", "New token is required.", "error");
           return;
         }
-        createOrUpdateToken(data.newToken);
+        await createTokenMutation.mutateAsync({
+          requestBody: { password: data.password, token: data.newToken }
+        });
       } else {
-        deleteToken();
+        await deleteTokenMutation.mutateAsync();
       }
       reset();
     } catch (error) {
-      showToast("Error!", "An error occurred.", "error");
+      // Error is handled in mutation callbacks
     }
   };
 
-  const formatToken = (token: string) => {
-    return `${token.slice(0, 5)}${'*'.repeat(20)}${token.slice(-5)}`;
-  };
+  if (!currentUser?.is_superuser) {
+    return (
+      <Container maxW="full">
+        <Alert status="warning">
+          <AlertIcon />
+          Only superusers can manage API tokens.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
-      <Flex justifyContent="space-between" alignItems="center" py={4}>
+      <Flex justifyContent="space-between" alignItems="right" py={4}>
         <Heading size="sm">API Token Management</Heading>
-        
-        <Button
-              variant="outline"
-              colorScheme="purple"
-              onClick={() => setIsCreatingOrUpdating(!isCreatingOrUpdating)}
-              type="button"
-              
-            >
-              {isCreatingOrUpdating ? "Switch to Delete" : "Switch to Create/Update"}
-        </Button>
-        <Button
-          variant="primary"
-          type="submit"
-          isLoading={isSubmitting}
-        >
-          {isCreatingOrUpdating ? (token ? "Update" : "Create") : "Delete"} Token
-        </Button>
-      </Flex>
-      <Flex justifyContent="center">
-        <Box w={{ base: "full", md: "50%" }} maxWidth="500px">
-          <VStack align="stretch" spacing={4} mb={6}>
-            <Text><strong>Current Token:</strong> </Text>
-             <Tag>{token ? formatToken(token) : "No token set"}</Tag>
-          </VStack>
-
-          <FormControl isRequired isInvalid={!!errors.password}>
-            <FormLabel color={color}>Password</FormLabel>
-            <Input
-              {...register("password", {
-                required: "Password is required",
-              })}
-              type="password"
-              placeholder="Enter your password"
-            />
-            {errors.password && (
-              <FormErrorMessage>{errors.password.message}</FormErrorMessage>
-            )}
-          </FormControl>
-
-          {isCreatingOrUpdating && (
-            <FormControl mt={4} isInvalid={!!errors.newToken}>
-              <FormLabel color={color}>New Token</FormLabel>
-              <Input
-                {...register("newToken", {
-                  required: "New token is required when creating or updating",
-                })}
-                type="text"
-                placeholder="Enter new token"
-              />
-              {errors.newToken && (
-                <FormErrorMessage>{errors.newToken.message}</FormErrorMessage>
-              )}
-            </FormControl>
-          )}
-
-          
+        <Box>
+          <Button
+            variant="outline"
+            colorScheme="purple"
+            onClick={() => setIsCreatingOrUpdating(!isCreatingOrUpdating)}
+            type="button"
+            mx={2}
+          >
+            {isCreatingOrUpdating ? "Switch to Delete" : "Switch to Create/Update"}
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            isLoading={isSubmitting || createTokenMutation.isPending || deleteTokenMutation.isPending}
+          >
+            {isCreatingOrUpdating ? (tokenData ? "Update" : "Create") : "Delete"} Token
+          </Button>
         </Box>
       </Flex>
+      
+      <VStack spacing={8} align="stretch" mb={6}>
+        <TokenDisplay tokenData={tokenData || null} />
+
+        <Flex justifyContent="center">
+          <Box w={{ base: "full", md: "50%" }} maxWidth="500px">
+            <FormControl isRequired isInvalid={!!errors.password}>
+              <FormLabel color={color}>Password</FormLabel>
+              <Input
+                {...register("password", {
+                  required: "Password is required",
+                })}
+                type="password"
+                placeholder="Enter your password"
+              />
+              {errors.password && (
+                <FormErrorMessage>{errors.password.message}</FormErrorMessage>
+              )}
+            </FormControl>
+
+            {isCreatingOrUpdating && (
+              <FormControl mt={4} isInvalid={!!errors.newToken}>
+                <FormLabel color={color}>New Token</FormLabel>
+                <Input
+                  {...register("newToken", {
+                    required: "New token is required when creating or updating",
+                  })}
+                  type="text"
+                  placeholder="Enter new token"
+                />
+                {errors.newToken && (
+                  <FormErrorMessage>{errors.newToken.message}</FormErrorMessage>
+                )}
+              </FormControl>
+            )}
+          </Box>
+        </Flex>
+      </VStack>
     </Container>
   );
 };

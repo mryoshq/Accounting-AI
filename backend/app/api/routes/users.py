@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import col, delete, func, select
 
-from app.crud.user import ( 
+from app.crud.user import (
     create_user_db,
     get_user_by_email_db,
     update_user_db,
@@ -14,7 +14,7 @@ from app.api.deps import (
     get_current_active_superuser,
 )
 from app.core.config import settings
-from app.core.security import get_password_hash, verify_password
+from app.core.security import get_password_hash, verify_password, encrypt_token, decrypt_token, preview_token
 from app.models import (
     Message,
     UpdatePassword,
@@ -25,12 +25,15 @@ from app.models import (
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
+    ApiTokenCreate,
+    ApiTokenResponse,
+    FullApiTokenResponse,
 )
 from app.utils import generate_new_account_email, send_email
 
+from datetime import datetime
+
 router = APIRouter()
-
-
 
 @router.get(
     "/",
@@ -41,7 +44,6 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     """
     Retrieve users.
     """
-
     count_statement = select(func.count()).select_from(User)
     count = session.exec(count_statement).one()
 
@@ -50,11 +52,12 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
 
     return UsersPublic(data=users, count=count)
 
-
 @router.post(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UserPublic
 )
-def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
+def create_user(session: SessionDep, user_in: UserCreate) -> Any:
     """
     Create new user.
     """
@@ -77,16 +80,18 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
         )
     return user
 
-
-
 @router.patch("/me", response_model=UserPublic)
 def update_user_me(
-    *, session: SessionDep, user_in: UserUpdateMe, current_user: CurrentUser
+    session: SessionDep,
+    user_in: UserUpdateMe,
+    current_user: CurrentUser
 ) -> Any:
     """
     Update own user.
     """
-
+    if user_in.api_token_enabled is not None and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Only superusers can enable/disable API tokens")
+    
     if user_in.email:
         existing_user = get_user_by_email_db(session=session, email=user_in.email)
         if existing_user and existing_user.id != current_user.id:
@@ -100,10 +105,11 @@ def update_user_me(
     session.refresh(current_user)
     return current_user
 
-
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-    *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser
+    session: SessionDep,
+    body: UpdatePassword,
+    current_user: CurrentUser
 ) -> Any:
     """
     Update own password.
@@ -120,14 +126,12 @@ def update_password_me(
     session.commit()
     return Message(message="Password updated successfully")
 
-
 @router.get("/me", response_model=UserPublic)
 def read_user_me(current_user: CurrentUser) -> Any:
     """
     Get current user.
     """
     return current_user
-
 
 @router.delete("/me", response_model=Message)
 def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
@@ -141,7 +145,6 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     session.delete(current_user)
     session.commit()
     return Message(message="User deleted successfully")
-
 
 @router.post("/signup", response_model=UserPublic)
 def register_user(session: SessionDep, user_in: UserRegister) -> Any:
@@ -163,11 +166,11 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
     user = create_user_db(session=session, user_in=user_create)
     return user
 
-
-
 @router.get("/{user_id}", response_model=UserPublic)
 def read_user_by_id(
-    user_id: int, session: SessionDep, current_user: CurrentUser
+    user_id: int,
+    session: SessionDep,
+    current_user: CurrentUser
 ) -> Any:
     """
     Get a specific user by id.
@@ -182,14 +185,12 @@ def read_user_by_id(
         )
     return user
 
-
 @router.patch(
     "/{user_id}",
     dependencies=[Depends(get_current_active_superuser)],
     response_model=UserPublic,
 )
 def update_user(
-    *,
     session: SessionDep,
     user_id: int,
     user_in: UserUpdate,
@@ -197,7 +198,6 @@ def update_user(
     """
     Update a user.
     """
-
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(
@@ -214,10 +214,11 @@ def update_user(
     db_user = update_user_db(session=session, db_user=db_user, user_in=user_in)
     return db_user
 
-
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_user(
-    session: SessionDep, current_user: CurrentUser, user_id: int
+    session: SessionDep,
+    current_user: CurrentUser,
+    user_id: int
 ) -> Message:
     """
     Delete a user.
@@ -232,3 +233,100 @@ def delete_user(
     session.delete(user)
     session.commit()
     return Message(message="User deleted successfully")
+
+# API token management
+
+@router.post("/me/api-token", response_model=ApiTokenResponse)
+def create_api_token(
+    session: SessionDep,
+    body: ApiTokenCreate,
+    current_user: CurrentUser
+) -> Any:
+    """
+    Create or refresh API token for the current user.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Only superusers can create API tokens")
+    
+    if not verify_password(body.password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect password")
+    
+    current_user.api_token = encrypt_token(body.token)
+    current_user.api_token_enabled = True
+    current_user.api_token_created_at = datetime.utcnow()
+    session.add(current_user)
+    session.commit()
+    
+    return ApiTokenResponse(
+        token_preview=f"{body.token[:5]}...{body.token[-5:]}",
+        created_at=current_user.api_token_created_at,
+        is_active=True
+    )
+
+
+
+
+
+@router.get("/me/api-token-preview", response_model=ApiTokenResponse)
+def get_api_token_preview(
+    session: SessionDep,
+    current_user: CurrentUser
+) -> Any:
+    """
+    Retrieve partial information about the current user's API token for frontend use.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Only superusers can retrieve API tokens")
+    
+    if not current_user.api_token or not current_user.api_token_enabled:
+        raise HTTPException(status_code=404, detail="No active API token found")
+    
+    # Get the token preview
+    token_preview = preview_token(current_user.api_token)
+    
+    return ApiTokenResponse(
+        token_preview=token_preview,
+        created_at=current_user.api_token_created_at,
+        is_active=current_user.api_token_enabled
+    )
+
+@router.get("/internal/full-api-token", response_model=FullApiTokenResponse)
+def get_full_api_token(
+    session: SessionDep,
+    current_user: User = Depends(get_current_active_superuser)
+) -> Any:
+    """
+    Retrieve the full decrypted API token for internal use.
+    This endpoint should only be accessible by the backend services.
+    """
+    if not current_user.api_token or not current_user.api_token_enabled:
+        raise HTTPException(status_code=404, detail="No active API token found")
+    
+    # Decrypt the stored token
+    decrypted_token = decrypt_token(current_user.api_token)
+    
+    return FullApiTokenResponse(
+        token=decrypted_token,
+        created_at=current_user.api_token_created_at,
+        is_active=current_user.api_token_enabled
+    )
+
+
+    
+@router.delete("/me/api-token", response_model=Message)
+def delete_api_token(
+    session: SessionDep,
+    current_user: CurrentUser
+) -> Any:
+    """
+    Delete the API token for the current user.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Only superusers can delete API tokens")
+    
+    current_user.api_token = None
+    current_user.api_token_enabled = False
+    session.add(current_user)
+    session.commit()
+    
+    return Message(message="API token deleted successfully")

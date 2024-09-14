@@ -50,6 +50,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
       confirm_password: "",
       is_superuser: false,
       is_active: false,
+      api_token_enabled: false,
     },
   })
 
@@ -74,15 +75,10 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
     mutation.mutate(data)
   }
 
+
   return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        size={{ base: "sm", md: "md" }}
-        isCentered
-      >
-        <ModalOverlay />
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }} isCentered>
+      <ModalOverlay />
         <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
           <ModalHeader>Add User</ModalHeader>
           <ModalCloseButton />
@@ -156,27 +152,31 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
               )}
             </FormControl>
             <Flex mt={4}>
-              <FormControl>
-                <Checkbox {...register("is_superuser")} colorScheme="teal">
-                  Is superuser?
-                </Checkbox>
-              </FormControl>
-              <FormControl>
-                <Checkbox {...register("is_active")} colorScheme="teal">
-                  Is active?
-                </Checkbox>
-              </FormControl>
-            </Flex>
-          </ModalBody>
-          <ModalFooter gap={3}>
-            <Button variant="primary" type="submit" isLoading={isSubmitting}>
-              Save
-            </Button>
-            <Button onClick={onClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+            <FormControl>
+              <Checkbox {...register("is_superuser")} colorScheme="teal">
+                Is superuser?
+              </Checkbox>
+            </FormControl>
+            <FormControl>
+              <Checkbox {...register("is_active")} colorScheme="teal">
+                Is active?
+              </Checkbox>
+            </FormControl>
+          </Flex>
+          <FormControl mt={4}>
+            <Checkbox {...register("api_token_enabled")} colorScheme="teal">
+              Enable API Token?
+            </Checkbox>
+          </FormControl>
+        </ModalBody>
+        <ModalFooter gap={3}>
+          <Button variant="primary" type="submit" isLoading={isSubmitting}>
+            Save
+          </Button>
+          <Button onClick={onClose}>Cancel</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   )
 }
 

@@ -1,3 +1,18 @@
+export type ApiTokenCreate = {
+	password: string;
+	token: string;
+};
+
+
+
+export type ApiTokenResponse = {
+	token_preview: string;
+	created_at?: string | null;
+	is_active: boolean;
+};
+
+
+
 export type Body_external_invoices_process_external_invoices = {
 	files: Array<Blob | File>;
 };
@@ -160,6 +175,14 @@ export type ExternalInvoiceUpdate = {
 export type ExternalInvoicesPublic = {
 	data: Array<ExternalInvoicePublic>;
 	count: number;
+};
+
+
+
+export type FullApiTokenResponse = {
+	token: string;
+	created_at: string;
+	is_active: boolean;
 };
 
 
@@ -541,7 +564,7 @@ export type SuppliersPublic = {
 export type TaskCreate = {
 	title: string;
 	description?: string | null;
-	status?: string;
+	status: TaskStatus;
 	due_date?: string | null;
 	is_active?: boolean;
 };
@@ -551,7 +574,7 @@ export type TaskCreate = {
 export type TaskPublic = {
 	title: string;
 	description?: string | null;
-	status?: string;
+	status: TaskStatus;
 	due_date?: string | null;
 	is_active?: boolean;
 	id: number;
@@ -560,10 +583,14 @@ export type TaskPublic = {
 
 
 
+export type TaskStatus = 'To Do' | 'In Progress' | 'Done';
+
+
+
 export type TaskUpdate = {
 	title?: string | null;
 	description?: string | null;
-	status?: string | null;
+	status?: TaskStatus | null;
 	due_date?: string | null;
 	is_active?: boolean | null;
 };
@@ -596,6 +623,7 @@ export type UserCreate = {
 	is_active?: boolean;
 	is_superuser?: boolean;
 	full_name?: string | null;
+	api_token_enabled?: boolean;
 	password: string;
 };
 
@@ -606,6 +634,7 @@ export type UserPublic = {
 	is_active?: boolean;
 	is_superuser?: boolean;
 	full_name?: string | null;
+	api_token_enabled?: boolean;
 	id: number;
 };
 
@@ -624,6 +653,7 @@ export type UserUpdate = {
 	is_active?: boolean;
 	is_superuser?: boolean;
 	full_name?: string | null;
+	api_token_enabled?: boolean | null;
 	password?: string | null;
 };
 
@@ -632,6 +662,7 @@ export type UserUpdate = {
 export type UserUpdateMe = {
 	full_name?: string | null;
 	email?: string | null;
+	api_token_enabled?: boolean | null;
 };
 
 

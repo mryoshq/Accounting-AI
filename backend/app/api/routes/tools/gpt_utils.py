@@ -1,3 +1,5 @@
+# app/api/routeS/tools/gpt_utils.py
+
 import os
 import base64
 from dotenv import load_dotenv
@@ -12,12 +14,46 @@ import json
 import instructor
 from openai import OpenAI
 
-def load_env():
-    load_dotenv()
-    api_key = os.getenv('OPENAI_API_KEY')
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY environment variable not found")
-    return api_key
+from sqlmodel import Session, select
+from app.models import User
+from app.core.db import engine
+from app.core.security import decrypt_token
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def get_user_api_key(user_id: int) -> str:
+    logger.debug(f"Attempting to retrieve API key for user {user_id}")
+    with Session(engine) as session:
+        statement = select(User.api_token).where(User.id == user_id)
+        result = session.exec(statement).first()
+        if not result:
+            logger.error(f"No API key found for user with id {user_id}")
+            raise ValueError(f"No API key found for user with id {user_id}")
+        logger.info(f"API key retrieved for user {user_id}")
+        return result
+
+def load_env(user_id: int) -> str:
+    logger.debug(f"Loading environment for user {user_id}")
+    try:
+        encrypted_api_key = get_user_api_key(user_id)
+        if not encrypted_api_key:
+            logger.error(f"Encrypted API key not found for user {user_id}")
+            raise ValueError("API key not found for the user")
+        
+        logger.debug(f"Attempting to decrypt API key for user {user_id}")
+        decrypted_api_key = decrypt_token(encrypted_api_key)
+        if not decrypted_api_key:
+            logger.error(f"Failed to decrypt API key for user {user_id}")
+            raise ValueError("Failed to decrypt API key")
+        
+        logger.info(f"API key successfully decrypted for user {user_id}")
+        logger.info(f"loadenv _ API key: {decrypted_api_key}")
+        return decrypted_api_key
+    except Exception as e:
+        logger.error(f"Error in load_env for user {user_id}: {str(e)}", exc_info=True)
+        raise
 
 
 # PDF processing

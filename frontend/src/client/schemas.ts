@@ -1,3 +1,38 @@
+export const $ApiTokenCreate = {
+	properties: {
+		password: {
+	type: 'string',
+	isRequired: true,
+},
+		token: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ApiTokenResponse = {
+	properties: {
+		token_preview: {
+	type: 'string',
+	isRequired: true,
+},
+		created_at: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
+}, {
+	type: 'null',
+}],
+},
+		is_active: {
+	type: 'boolean',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $Body_external_invoices_process_external_invoices = {
 	properties: {
 		files: {
@@ -547,6 +582,24 @@ export const $ExternalInvoicesPublic = {
 },
 		count: {
 	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $FullApiTokenResponse = {
+	properties: {
+		token: {
+	type: 'string',
+	isRequired: true,
+},
+		created_at: {
+	type: 'string',
+	isRequired: true,
+	format: 'date-time',
+},
+		is_active: {
+	type: 'boolean',
 	isRequired: true,
 },
 	},
@@ -1875,8 +1928,8 @@ export const $TaskCreate = {
 }],
 },
 		status: {
-	type: 'string',
-	default: 'To Do',
+	type: 'TaskStatus',
+	isRequired: true,
 },
 		due_date: {
 	type: 'any-of',
@@ -1908,8 +1961,8 @@ export const $TaskPublic = {
 }],
 },
 		status: {
-	type: 'string',
-	default: 'To Do',
+	type: 'TaskStatus',
+	isRequired: true,
 },
 		due_date: {
 	type: 'any-of',
@@ -1934,6 +1987,11 @@ export const $TaskPublic = {
 	},
 } as const;
 
+export const $TaskStatus = {
+	type: 'Enum',
+	enum: ['To Do','In Progress','Done',],
+} as const;
+
 export const $TaskUpdate = {
 	properties: {
 		title: {
@@ -1955,7 +2013,7 @@ export const $TaskUpdate = {
 		status: {
 	type: 'any-of',
 	contains: [{
-	type: 'string',
+	type: 'TaskStatus',
 }, {
 	type: 'null',
 }],
@@ -2043,6 +2101,10 @@ export const $UserCreate = {
 	type: 'null',
 }],
 },
+		api_token_enabled: {
+	type: 'boolean',
+	default: false,
+},
 		password: {
 	type: 'string',
 	isRequired: true,
@@ -2071,6 +2133,10 @@ export const $UserPublic = {
 }, {
 	type: 'null',
 }],
+},
+		api_token_enabled: {
+	type: 'boolean',
+	default: false,
 },
 		id: {
 	type: 'number',
@@ -2126,6 +2192,14 @@ export const $UserUpdate = {
 	type: 'null',
 }],
 },
+		api_token_enabled: {
+	type: 'any-of',
+	contains: [{
+	type: 'boolean',
+}, {
+	type: 'null',
+}],
+},
 		password: {
 	type: 'any-of',
 	contains: [{
@@ -2151,6 +2225,14 @@ export const $UserUpdateMe = {
 	type: 'any-of',
 	contains: [{
 	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		api_token_enabled: {
+	type: 'any-of',
+	contains: [{
+	type: 'boolean',
 }, {
 	type: 'null',
 }],

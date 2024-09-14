@@ -1,17 +1,18 @@
 from sqlmodel import Field, Relationship, SQLModel
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+from datetime import datetime
 
 ##### EXISTING CODE #####
 # Shared properties
 # TO DO replace email str with EmailStr when sqlmodel supports it
 
-# --- User models ----
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
     is_active: bool = True
     is_superuser: bool = False
     full_name: Optional[str] = None
+    api_token_enabled: bool = False
 
 class UserCreate(UserBase):
     password: str
@@ -24,10 +25,12 @@ class UserRegister(SQLModel):
 class UserUpdate(UserBase):
     email: Optional[str] = None
     password: Optional[str] = None
+    api_token_enabled: Optional[bool] = None
 
 class UserUpdateMe(SQLModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
+    api_token_enabled: Optional[bool] = None
 
 class UpdatePassword(SQLModel):
     current_password: str
@@ -37,6 +40,8 @@ class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str
     tasks: List["Task"] = Relationship(back_populates="user")
+    api_token: Optional[str] = Field(default=None, index=True)
+    api_token_created_at: Optional[datetime] = Field(default=None)
 
 class UserPublic(UserBase):
     id: int
@@ -45,8 +50,20 @@ class UsersPublic(SQLModel):
     data: List[UserPublic]
     count: int
 
- 
+# API token models
+class ApiTokenCreate(SQLModel):
+    password: str
+    token: str  # The API token provided by the user
 
+class ApiTokenResponse(SQLModel):
+    token_preview: str
+    created_at: Optional[datetime] = None
+    is_active: bool
+
+class FullApiTokenResponse(SQLModel):
+    token: str
+    created_at: datetime
+    is_active: bool
 
 
 # Generic message

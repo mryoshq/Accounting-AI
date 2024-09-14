@@ -26,6 +26,7 @@ interface Message {
 
 interface ChatBoxProps {
   onStateChange: (hasMessages: boolean) => void;
+  isOpen: boolean;
 }
 
 export interface ChatBoxRef {
@@ -80,12 +81,13 @@ const MessageContent: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ onStateChange }, ref) => {
+export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ onStateChange, isOpen }, ref) => {
   const [activeTab, setActiveTab] = useState(0);
   const [messages, setMessages] = useState<Message[][]>([[], [], []]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState([false, false, false]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const bgColor = useColorModeValue('gray.50', 'gray.700');
   const userBgColor = useColorModeValue('blue.100', 'blue.700');
   const botBgColor = useColorModeValue('green.100', 'green.700');
@@ -104,6 +106,12 @@ export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ onStateChange }, 
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,6 +242,7 @@ export const ChatBox = forwardRef<ChatBoxRef, ChatBoxProps>(({ onStateChange }, 
         <form onSubmit={handleSubmit}>
           <HStack>
             <Input 
+              ref={inputRef}
               value={input} 
               onChange={(e) => setInput(e.target.value)} 
               placeholder={`Type a ${activeTab === 0 ? 'message' : 'task'}...`}

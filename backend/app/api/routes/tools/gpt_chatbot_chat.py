@@ -1,3 +1,4 @@
+# app/api/routes/tools/gpt_chatbot_chat.py
 import json, re
 import logging
 from typing import Optional, Dict, Any, List
@@ -14,24 +15,27 @@ from langchain.schema import SystemMessage
 from langchain.tools import StructuredTool
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class ChatbotManager:
-    def __init__(self):
+    def __init__(self, user_id: int):
         self.agent_executor = None
-        self.api_key: str = load_env()
-        self.base_url: str = "http://localhost"  # Update this with your actual base URL
+        self.user_id = user_id
+        self.api_key: str = load_env(user_id)
+        logger.debug(f"API key loaded for user {user_id}: {self.api_key[:5]}...{self.api_key[-5:] if self.api_key else 'None'}")  # Log part of the API key
+        self.base_url: str = "http://localhost" 
         self.access_token: Optional[str] = None
         self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        logger.info("ChatbotManager initialized")
+        logger.info(f"ChatbotManager initialized for user {user_id}")
+
 
     def get_access_token(self) -> str:
         """Get an access token for authentication."""
         login_url = f"{self.base_url}/api/v1/login/access-token"
         data = {
-            "username": "admin@example.com",  # Replace with actual username
-            "password": "password"  # Replace with actual password
+            "username": "admin@example.com",  
+            "password": "password" 
         }
         try:
             response = requests.post(login_url, data=data)
@@ -178,7 +182,7 @@ class ChatbotManager:
                         ))
                         logger.info(f"Created tool: {tool['function']['name']}")
 
-            llm = ChatOpenAI(model_name="gpt-4", temperature=0.0)
+            llm = ChatOpenAI(api_key=self.api_key, model_name="gpt-4", temperature=0.0)
             logger.info("Language model initialized")
 
             prompt = ChatPromptTemplate.from_messages([
@@ -253,7 +257,15 @@ class ChatbotManager:
             logger.error(f"Error processing query: {e}")
             return f"An error occurred while processing your query: {str(e)}"
 
-chatbot_manager = ChatbotManager()
+# Initialize the chatbot manager
+chatbot_manager = None
 
-def process_query(query: str) -> str:
-    return chatbot_manager.process_query(query)
+def get_chatbot_manager(user_id: int) -> ChatbotManager:
+    global chatbot_manager
+    if chatbot_manager is None or chatbot_manager.user_id != user_id:
+        chatbot_manager = ChatbotManager(user_id)
+    return chatbot_manager
+
+def process_query(query: str, user_id: int) -> str:
+    manager = get_chatbot_manager(user_id)
+    return manager.process_query(query)
