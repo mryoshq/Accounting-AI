@@ -1,3 +1,4 @@
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Button,
@@ -12,20 +13,22 @@ import {
   Input,
   Heading,
   useColorModeValue,
-} from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
-import { type SubmitHandler, useForm } from "react-hook-form"
+  Image,
+  Icon,
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { FaCamera, FaTrash } from "react-icons/fa";
 
 import {
   type ApiError,
   type UserPublic,
   type UserUpdateMe,
   UsersService,
-} from "../../client"
-import useAuth from "../../hooks/useAuth"
-import useCustomToast from "../../hooks/useCustomToast"
-import { emailPattern } from "../../utils"
+} from "../../client";
+import useAuth from "../../hooks/useAuth";
+import useCustomToast from "../../hooks/useCustomToast";
+import { emailPattern } from "../../utils";
 
 const PicturePlaceholder = () => (
   <Box
@@ -63,59 +66,100 @@ const PicturePlaceholder = () => (
       }}
     />
   </Box>
-)
+);
 
 const UserInformation = () => {
-  const queryClient = useQueryClient()
-  const showToast = useCustomToast()
-  const [editMode, setEditMode] = useState(false)
-  const { user: currentUser } = useAuth()
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
+  const [editMode, setEditMode] = useState(false);
+  const { user: currentUser } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     reset,
-    getValues,
     formState: { isSubmitting, errors, isDirty },
+    setValue,
   } = useForm<UserPublic>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       full_name: currentUser?.full_name,
       email: currentUser?.email,
+      profile_picture: currentUser?.profile_picture,
     },
-  })
+  });
+
+  useEffect(() => {
+    if (currentUser?.profile_picture) {
+      setPreviewImage(`data:image/jpeg;base64,${currentUser.profile_picture}`);
+    }
+  }, [currentUser]);
 
   const toggleEditMode = () => {
-    setEditMode(!editMode)
-  }
+    setEditMode(!editMode);
+    if (!editMode) {
+      setPreviewImage(currentUser?.profile_picture ? `data:image/jpeg;base64,${currentUser.profile_picture}` : null);
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: (data: UserUpdateMe) =>
       UsersService.updateUserMe({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "User updated successfully.", "success")
-      setEditMode(false)
+      showToast("Success!", "User updated successfully.", "success");
+      setEditMode(false);
     },
     onError: (err: ApiError) => {
-      const errDetail = (err.body as any)?.detail
-      showToast("Something went wrong.", `${errDetail}`, "error")
+      const errDetail = (err.body as any)?.detail;
+      showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
-  })
+  });
 
-  const onSubmit: SubmitHandler<UserUpdateMe> = async (data) => {
-    mutation.mutate(data)
-  }
+  const onSubmit = async (data: UserUpdateMe) => {
+    if (previewImage && previewImage !== `data:image/jpeg;base64,${currentUser?.profile_picture}`) {
+      data.profile_picture = previewImage.split(',')[1]; // Remove the "data:image/..." prefix
+    }
+    mutation.mutate(data);
+  };
 
   const onCancel = () => {
-    reset()
-    setEditMode(false)
-  }
+    reset();
+    setEditMode(false);
+    setPreviewImage(currentUser?.profile_picture ? `data:image/jpeg;base64,${currentUser.profile_picture}` : null);
+  };
 
-  const borderColor = useColorModeValue("green", "white")
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setPreviewImage(result);
+        setValue("profile_picture", result.split(',')[1], { shouldDirty: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (editMode) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleDeleteImage = () => {
+    setPreviewImage(null);
+    setValue("profile_picture", null, { shouldDirty: true });
+  };
+
+  const borderColor = useColorModeValue("green", "white");
 
   return (
     <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
@@ -126,7 +170,7 @@ const UserInformation = () => {
           onClick={editMode ? handleSubmit(onSubmit) : toggleEditMode}
           type="button"
           isLoading={isSubmitting}
-          isDisabled={editMode && (!isDirty || !getValues("email"))}
+          isDisabled={editMode && !isDirty}
         >
           {editMode ? "Save" : "Edit"}
         </Button>
@@ -137,8 +181,60 @@ const UserInformation = () => {
             <Tbody>
               <Tr>
                 <Td colSpan={2} borderColor={borderColor}>
-                  <Flex justifyContent="center" py={4}>
-                    <PicturePlaceholder />
+                  <Flex justifyContent="center" py={4} position="relative">
+                    {previewImage ? (
+                      <Image
+                        src={previewImage}
+                        alt="Profile"
+                        width="150px"
+                        height="200px"
+                        objectFit="cover"
+                        borderRadius="md"
+                        onClick={handleImageClick}
+                        cursor={editMode ? "pointer" : "default"}
+                      />
+                    ) : (
+                      <PicturePlaceholder />
+                    )}
+                    {editMode && (
+                      <>
+                        <Icon
+                          as={FaCamera}
+                          position="absolute"
+                          bottom="2"
+                          right="2"
+                          color="white"
+                          bg="gray.700"
+                          p={2}
+                          borderRadius="full"
+                          boxSize={8}
+                          cursor="pointer"
+                          onClick={handleImageClick}
+                        />
+                        {previewImage && (
+                          <Icon
+                            as={FaTrash}
+                            position="absolute"
+                            top="2"
+                            right="2"
+                            color="white"
+                            bg="red.500"
+                            p={2}
+                            borderRadius="full"
+                            boxSize={8}
+                            cursor="pointer"
+                            onClick={handleDeleteImage}
+                          />
+                        )}
+                      </>
+                    )}
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      display="none"
+                      onChange={handleImageChange}
+                    />
                   </Flex>
                 </Td>
               </Tr>
@@ -193,7 +289,7 @@ const UserInformation = () => {
         </Flex>
       )}
     </Container>
-  )
-}
+  );
+};
 
-export default UserInformation
+export default UserInformation;

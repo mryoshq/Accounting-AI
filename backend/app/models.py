@@ -2,6 +2,9 @@ from sqlmodel import Field, Relationship, SQLModel
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from pydantic import validator
+import base64
+
 
 ##### EXISTING CODE #####
 # Shared properties
@@ -13,6 +16,16 @@ class UserBase(SQLModel):
     is_superuser: bool = False
     full_name: Optional[str] = None
     api_token_enabled: bool = False
+    profile_picture: Optional[str] = None  # This will store the base64 encoded image
+
+    @validator('profile_picture')
+    def validate_profile_picture(cls, v):
+        if v is not None:
+            try:
+                base64.b64decode(v)
+            except:
+                raise ValueError('Invalid base64 string')
+        return v
 
 class UserCreate(UserBase):
     password: str
@@ -26,11 +39,13 @@ class UserUpdate(UserBase):
     email: Optional[str] = None
     password: Optional[str] = None
     api_token_enabled: Optional[bool] = None
+    profile_picture: Optional[str] = None
 
 class UserUpdateMe(SQLModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
     api_token_enabled: Optional[bool] = None
+    profile_picture: Optional[str] = None
 
 class UpdatePassword(SQLModel):
     current_password: str
@@ -49,6 +64,8 @@ class UserPublic(UserBase):
 class UsersPublic(SQLModel):
     data: List[UserPublic]
     count: int
+
+
 
 # API token models
 class ApiTokenCreate(SQLModel):

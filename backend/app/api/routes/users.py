@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlmodel import col, delete, func, select
 
 from app.crud.user import (
@@ -8,6 +8,8 @@ from app.crud.user import (
     get_user_by_email_db,
     update_user_db,
 )
+from app.crud.user import update_user_profile_picture_db, delete_user_profile_picture_db
+
 from app.api.deps import (
     CurrentUser,
     SessionDep,
@@ -29,9 +31,11 @@ from app.models import (
     ApiTokenResponse,
     FullApiTokenResponse,
 )
-from app.utils import generate_new_account_email, send_email
 
+from app.utils import generate_new_account_email, send_email
 from datetime import datetime
+import base64
+
 
 router = APIRouter()
 
@@ -85,25 +89,32 @@ def update_user_me(
     session: SessionDep,
     user_in: UserUpdateMe,
     current_user: CurrentUser
-) -> Any:
+):
     """
     Update own user.
     """
+    if user_in.email and user_in.email != current_user.email:
+        if get_user_by_email_db(session=session, email=user_in.email):
+            raise HTTPException(
+                status_code=400,
+                detail="Email already registered",
+            )
+    
     if user_in.api_token_enabled is not None and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Only superusers can enable/disable API tokens")
-    
-    if user_in.email:
-        existing_user = get_user_by_email_db(session=session, email=user_in.email)
-        if existing_user and existing_user.id != current_user.id:
-            raise HTTPException(
-                status_code=409, detail="User with this email already exists"
-            )
+
     user_data = user_in.model_dump(exclude_unset=True)
-    current_user.sqlmodel_update(user_data)
-    session.add(current_user)
-    session.commit()
-    session.refresh(current_user)
-    return current_user
+    
+    if user_in.profile_picture:
+        try:
+            # Validate the base64 string
+            base64.b64decode(user_in.profile_picture)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid profile picture data")
+
+    updated_user = update_user_db(session=session, db_user=current_user, user_in=user_data)
+    return updated_user
+
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
@@ -264,7 +275,7 @@ def create_api_token(
     )
 
 
-
+# api token 
 
 
 @router.get("/me/api-token-preview", response_model=ApiTokenResponse)
@@ -330,3 +341,45 @@ def delete_api_token(
     session.commit()
     
     return Message(message="API token deleted successfully")
+
+
+
+# Profile picture management
+
+@router.post("/me/profile-picture", response_model=Message)
+async def upload_profile_picture(
+    current_user: CurrentUser,
+    session: SessionDep,
+    file: UploadFile = File(...)
+):
+    """
+    Upload a profile picture for the current user.
+    """
+    contents = await file.read()
+    encoded_image = base64.b64encode(contents).decode('utf-8')
+    
+    user_data = {"profile_picture": encoded_image}
+    update_user_db(session=session, db_user=current_user, user_in=user_data)
+    
+    return Message(message="Profile picture uploaded successfully")
+
+@router.get("/me/profile-picture", response_model=str)
+async def get_profile_picture(current_user: CurrentUser):
+    """
+    Get the profile picture of the current user.
+    """
+    if not current_user.profile_picture:
+        raise HTTPException(status_code=404, detail="Profile picture not found")
+    return current_user.profile_picture
+
+@router.delete("/me/profile-picture", response_model=Message)
+async def delete_profile_picture(
+    current_user: CurrentUser,
+    session: SessionDep
+):
+    """
+    Delete the profile picture of the current user.
+    """
+    user_data = {"profile_picture": None}
+    update_user_db(session=session, db_user=current_user, user_in=user_data)
+    return Message(message="Profile picture deleted successfully")

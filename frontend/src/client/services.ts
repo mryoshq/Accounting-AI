@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,ApiTokenCreate,ApiTokenResponse,FullApiTokenResponse,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ChatbotQuery,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse,TaskCreate,TaskPublic,TasksPublic,TaskUpdate } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,ApiTokenCreate,ApiTokenResponse,Body_users_upload_profile_picture,FullApiTokenResponse,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ChatbotQuery,PartPublic,PartsPublic,PaymentToSuppliersPublic,ProjectCreate,ProjectPublic,ProjectsPublic,ProjectUpdate,ExternalInvoicesPublic,SupplierContactCreate,SupplierContactPublic,SupplierContactsPublic,SupplierContactUpdate,SupplierCreate,SupplierPublic,SuppliersPublic,SupplierUpdate,CustomerContactCreate,CustomerContactPublic,CustomerContactsPublic,CustomerContactUpdate,CustomerCreate,CustomerPublic,CustomersPublic,CustomerUpdate,InternalInvoicesPublic,PaymentFromCustomersPublic,PartCreate,PartUpdate,Body_external_invoices_process_external_invoices,ExternalInvoiceCreate,ExternalInvoicePublic,ExternalInvoiceUpdate,InvoiceProcessingResponse,Body_internal_invoices_process_internal_invoices,InternalInvoiceCreate,InternalInvoicePublic,InternalInvoiceUpdate,PaymentToSupplierCreate,PaymentToSupplierPublic,PaymentToSupplierUpdate,PaymentFromCustomerCreate,PaymentFromCustomerPublic,PaymentFromCustomerUpdate,ReportRequest,ReportResponse,TaskCreate,TaskPublic,TasksPublic,TaskUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -160,6 +160,10 @@ export type TDataDeleteUser = {
             }
 export type TDataCreateApiToken = {
                 requestBody: ApiTokenCreate
+                
+            }
+export type TDataUploadProfilePicture = {
+                formData: Body_users_upload_profile_picture
                 
             }
 
@@ -425,6 +429,53 @@ requestBody,
 				return __request(OpenAPI, {
 			method: 'GET',
 			url: '/api/v1/users/internal/full-api-token',
+		});
+	}
+
+	/**
+	 * Get Profile Picture
+	 * Get the profile picture of the current user.
+	 * @returns string Successful Response
+	 * @throws ApiError
+	 */
+	public static getProfilePicture(): CancelablePromise<string> {
+				return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/users/me/profile-picture',
+		});
+	}
+
+	/**
+	 * Upload Profile Picture
+	 * Upload a profile picture for the current user.
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static uploadProfilePicture(data: TDataUploadProfilePicture): CancelablePromise<Message> {
+		const {
+formData,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/users/me/profile-picture',
+			formData: formData,
+			mediaType: 'multipart/form-data',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Profile Picture
+	 * Delete the profile picture of the current user.
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteProfilePicture(): CancelablePromise<Message> {
+				return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/users/me/profile-picture',
 		});
 	}
 

@@ -101,6 +101,16 @@ export const $Body_login_login_access_token = {
 	},
 } as const;
 
+export const $Body_users_upload_profile_picture = {
+	properties: {
+		file: {
+	type: 'binary',
+	isRequired: true,
+	format: 'binary',
+},
+	},
+} as const;
+
 export const $ChatbotQuery = {
 	properties: {
 		query: {
@@ -2105,6 +2115,14 @@ export const $UserCreate = {
 	type: 'boolean',
 	default: false,
 },
+		profile_picture: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
 		password: {
 	type: 'string',
 	isRequired: true,
@@ -2137,6 +2155,14 @@ export const $UserPublic = {
 		api_token_enabled: {
 	type: 'boolean',
 	default: false,
+},
+		profile_picture: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
 },
 		id: {
 	type: 'number',
@@ -2200,6 +2226,14 @@ export const $UserUpdate = {
 	type: 'null',
 }],
 },
+		profile_picture: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
 		password: {
 	type: 'any-of',
 	contains: [{
@@ -2233,6 +2267,14 @@ export const $UserUpdateMe = {
 	type: 'any-of',
 	contains: [{
 	type: 'boolean',
+}, {
+	type: 'null',
+}],
+},
+		profile_picture: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
 }, {
 	type: 'null',
 }],

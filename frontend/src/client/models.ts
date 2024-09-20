@@ -36,6 +36,12 @@ export type Body_login_login_access_token = {
 
 
 
+export type Body_users_upload_profile_picture = {
+	file: Blob | File;
+};
+
+
+
 export type ChatbotQuery = {
 	query: string;
 };
@@ -624,6 +630,7 @@ export type UserCreate = {
 	is_superuser?: boolean;
 	full_name?: string | null;
 	api_token_enabled?: boolean;
+	profile_picture?: string | null;
 	password: string;
 };
 
@@ -635,6 +642,7 @@ export type UserPublic = {
 	is_superuser?: boolean;
 	full_name?: string | null;
 	api_token_enabled?: boolean;
+	profile_picture?: string | null;
 	id: number;
 };
 
@@ -654,6 +662,7 @@ export type UserUpdate = {
 	is_superuser?: boolean;
 	full_name?: string | null;
 	api_token_enabled?: boolean | null;
+	profile_picture?: string | null;
 	password?: string | null;
 };
 
@@ -663,6 +672,7 @@ export type UserUpdateMe = {
 	full_name?: string | null;
 	email?: string | null;
 	api_token_enabled?: boolean | null;
+	profile_picture?: string | null;
 };
 
 

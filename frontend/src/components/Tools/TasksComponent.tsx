@@ -138,7 +138,7 @@ const TaskRow = ({ date, tasks, onEdit, onDelete }: {
 
 const TasksComponent: React.FC = () => {
   const queryClient = useQueryClient();
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  const bgColor = useColorModeValue('gray.200', 'gray.500');
   const headerBgColor = useColorModeValue('gray.200', 'gray.700');
   const separatorColor = useColorModeValue('green.500', 'white');
   const showToast = useCustomToast();

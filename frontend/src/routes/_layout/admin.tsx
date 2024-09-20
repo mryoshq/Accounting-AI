@@ -12,7 +12,7 @@ import {
   Th,
   Thead,
   Tr,
-  Switch,
+  Avatar,
 } from "@chakra-ui/react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
@@ -39,15 +39,29 @@ const MembersTableBody = () => {
     <Tbody>
       {users.data.map((user) => (
         <Tr key={user.id}>
-          <Td color={!user.full_name ? "ui.dim" : "inherit"}>
-            {user.full_name || "N/A"}
-            {currentUser?.id === user.id && (
-              <Badge ml="1" colorScheme="teal">
-                You
-              </Badge>
-            )}
+          <Td>
+            <Flex alignItems="center">
+              <Avatar
+                size="sm"
+                name={user.full_name || user.email}
+                src={user.profile_picture ? `data:image/jpeg;base64,${user.profile_picture}` : undefined}
+                mr={2}
+              />
+              <Box>
+                <Box color={!user.full_name ? "ui.dim" : "inherit"}>
+                  {user.full_name || "N/A"}
+                  {currentUser?.id === user.id && (
+                    <Badge ml="1" colorScheme="teal">
+                      You
+                    </Badge>
+                  )}
+                </Box>
+                <Box fontSize="sm" color="gray.500">
+                  {user.email}
+                </Box>
+              </Box>
+            </Flex>
           </Td>
-          <Td>{user.email}</Td>
           <Td>{user.is_superuser ? "Superuser" : "User"}</Td>
           <Td>
             <Flex gap={2}>
@@ -90,7 +104,7 @@ const MembersBodySkeleton = () => {
   return (
     <Tbody>
       <Tr>
-        {new Array(6).fill(null).map((_, index) => (
+        {new Array(5).fill(null).map((_, index) => (
           <Td key={index}>
             <SkeletonText noOfLines={1} paddingBlock="16px" />
           </Td>
@@ -111,12 +125,11 @@ function Admin() {
         <Table fontSize="md" size={{ base: "sm", md: "md" }}>
           <Thead>
             <Tr>
-              <Th width="20%">Full name</Th>
-              <Th width="30%">Email</Th>
-              <Th width="10%">Role</Th>
-              <Th width="10%">Status</Th>
-              <Th width="15%">API Token Enabled</Th>
-              <Th width="15%">Actions</Th>
+              <Th width="30%">User</Th>
+              <Th width="15%">Role</Th>
+              <Th width="15%">Status</Th>
+              <Th width="20%">API Token Enabled</Th>
+              <Th width="20%">Actions</Th>
             </Tr>
           </Thead>
           <Suspense fallback={<MembersBodySkeleton />}>
