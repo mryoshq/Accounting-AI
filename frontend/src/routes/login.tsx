@@ -1,4 +1,3 @@
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import {
   Button,
   Container,
@@ -14,7 +13,9 @@ import {
   useBoolean,
   useColorMode,
   useColorModeValue,
+  Link,
 } from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import {
   Link as RouterLink,
   createFileRoute,
@@ -71,81 +72,79 @@ function Login() {
   };
 
   return (
-    <>
-      <Container
-        as="form"
-        onSubmit={handleSubmit(onSubmit)}
-        h="100vh"
-        maxW="sm"
-        alignItems="stretch"
-        justifyContent="center"
-        gap={4}
-        centerContent
-        position="relative"
-      >
-        <Image
-          src={Logo}
-          alt="Acounting-AI logo"
-          height="auto"
-          maxW="2xs"
-          alignSelf="center"
-          mb={4}
+    <Container
+      as="form"
+      onSubmit={handleSubmit(onSubmit)}
+      h="100vh"
+      maxW="sm"
+      alignItems="stretch"
+      justifyContent="center"
+      gap={4}
+      centerContent
+      position="relative"
+    >
+      <Image
+        src={Logo}
+        alt="Acounting-AI logo"
+        height="auto"
+        maxW="2xs"
+        alignSelf="center"
+        mb={4}
+      />
+      <FormControl id="username" isInvalid={!!errors.username || !!error}>
+        <Input
+          id="username"
+          {...register("username", {
+            pattern: emailPattern,
+          })}
+          placeholder="Email"
+          type="email"
+          required
         />
-        <FormControl id="username" isInvalid={!!errors.username || !!error}>
+        {errors.username && (
+          <FormErrorMessage>{errors.username.message}</FormErrorMessage>
+        )}
+      </FormControl>
+      <FormControl id="password" isInvalid={!!error}>
+        <InputGroup>
           <Input
-            id="username"
-            {...register("username", {
-              pattern: emailPattern,
-            })}
-            placeholder="Email"
-            type="email"
+            {...register("password")}
+            type={show ? "text" : "password"}
+            placeholder="Password"
             required
           />
-          {errors.username && (
-            <FormErrorMessage>{errors.username.message}</FormErrorMessage>
-          )}
-        </FormControl>
-        <FormControl id="password" isInvalid={!!error}>
-          <InputGroup>
-            <Input
-              {...register("password")}
-              type={show ? "text" : "password"}
-              placeholder="Password"
-              required
-            />
-            <InputRightElement
-              color="ui.dim"
-              _hover={{
-                cursor: "pointer",
-              }}
+          <InputRightElement
+            color="ui.dim"
+            _hover={{
+              cursor: "pointer",
+            }}
+          >
+            <Icon
+              onClick={setShow.toggle}
+              aria-label={show ? "Hide password" : "Show password"}
             >
-              <Icon
-                onClick={setShow.toggle}
-                aria-label={show ? "Hide password" : "Show password"}
-              >
-                {show ? <ViewOffIcon /> : <ViewIcon />}
-              </Icon>
-            </InputRightElement>
-          </InputGroup>
-          {error && <FormErrorMessage>{error}</FormErrorMessage>}
-        </FormControl>
-        <HStack spacing={4} width="full" justify="center">
-          <Button as={RouterLink} to="/recover-password" variant="link" color="blue.500">
-            Forgot password?
-          </Button>
-          <IconButton
-            aria-label="Toggle Color Mode"
-            icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
-            onClick={toggleColorMode}
-            variant="ghost"
-            color={iconColor}
-          />
-        </HStack>
-        <Button variant="primary" type="submit" isLoading={isSubmitting} width="full">
-          Log In
-        </Button>
-      </Container>
-    </>
+              {show ? <ViewOffIcon /> : <ViewIcon />}
+            </Icon>
+          </InputRightElement>
+        </InputGroup>
+        {error && <FormErrorMessage>{error}</FormErrorMessage>}
+      </FormControl>
+      <HStack spacing={4} width="full" justify="center">
+        <Link as={RouterLink} to="/recover-password" color="blue.500">
+          Forgot password?
+        </Link>
+        <IconButton
+          aria-label="Toggle Color Mode"
+          icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
+          onClick={toggleColorMode}
+          variant="ghost"
+          color={iconColor}
+        />
+      </HStack>
+      <Button variant="primary" type="submit" isLoading={isSubmitting} width="full">
+        Log In
+      </Button>
+    </Container>
   );
 }
 

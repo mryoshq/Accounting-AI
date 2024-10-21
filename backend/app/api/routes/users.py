@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlmodel import col, delete, func, select
@@ -7,16 +7,20 @@ from app.crud.user import (
     create_user_db,
     get_user_by_email_db,
     update_user_db,
+    update_user_profile_picture_db, 
+    delete_user_profile_picture_db,
+    generate_backup_codes_db,
+    invalidate_backup_codes_db,
 )
-from app.crud.user import update_user_profile_picture_db, delete_user_profile_picture_db
 
 from app.api.deps import (
     CurrentUser,
     SessionDep,
     get_current_active_superuser,
+    get_current_user,
 )
 from app.core.config import settings
-from app.core.security import get_password_hash, verify_password, encrypt_token, decrypt_token, preview_token
+
 from app.models import (
     Message,
     UpdatePassword,
@@ -31,6 +35,16 @@ from app.models import (
     ApiTokenResponse,
     FullApiTokenResponse,
 )
+
+from app.core.security import (
+    get_password_hash, 
+    verify_password, 
+    encrypt_token, 
+    decrypt_token, 
+    preview_token, 
+    generate_backup_codes, 
+    hash_backup_codes
+) 
 
 from app.utils import generate_new_account_email, send_email
 from datetime import datetime
@@ -245,7 +259,9 @@ def delete_user(
     session.commit()
     return Message(message="User deleted successfully")
 
-# API token management
+#
+##
+### API token management
 
 @router.post("/me/api-token", response_model=ApiTokenResponse)
 def create_api_token(
@@ -273,9 +289,6 @@ def create_api_token(
         created_at=current_user.api_token_created_at,
         is_active=True
     )
-
-
-# api token 
 
 
 @router.get("/me/api-token-preview", response_model=ApiTokenResponse)
@@ -322,7 +335,6 @@ def get_full_api_token(
         is_active=current_user.api_token_enabled
     )
 
-
     
 @router.delete("/me/api-token", response_model=Message)
 def delete_api_token(
@@ -343,8 +355,9 @@ def delete_api_token(
     return Message(message="API token deleted successfully")
 
 
-
-# Profile picture management
+#
+##
+### Profile picture management
 
 @router.post("/me/profile-picture", response_model=Message)
 async def upload_profile_picture(
@@ -383,3 +396,36 @@ async def delete_profile_picture(
     user_data = {"profile_picture": None}
     update_user_db(session=session, db_user=current_user, user_in=user_data)
     return Message(message="Profile picture deleted successfully")
+
+
+
+
+
+#
+##
+### Password recovery : Backup codes
+
+
+
+@router.post("/me/generate-backup-codes", response_model=List[str])
+def generate_backup_codes(
+    current_user: CurrentUser,
+    session: SessionDep
+) -> List[str]:
+    """Generate new backup codes for the current user."""
+    new_codes = generate_backup_codes_db(session=session, user=current_user)
+    return new_codes
+
+@router.get("/me/has-backup-codes", response_model=bool)
+def has_backup_codes(current_user: CurrentUser) -> bool:
+    """Check if the current user has backup codes."""
+    return bool(current_user.backup_codes)
+
+@router.post("/me/invalidate-backup-codes", response_model=Message)
+def invalidate_backup_codes(
+    current_user: CurrentUser,
+    session: SessionDep
+) -> Message:
+    """Invalidate all backup codes for the current user."""
+    invalidate_backup_codes_db(session=session, user=current_user)
+    return Message(message="All backup codes have been invalidated")

@@ -38,9 +38,22 @@ def login_access_token(
         session=session, email=form_data.username, password=form_data.password
     )
     if not user:
+        # If regular authentication fails, try backup code
+        user = get_user_by_email_db(session=session, email=form_data.username)
+        if user and user.backup_codes:
+            if security.verify_backup_code(form_data.password, user.backup_codes):
+                # Remove the used backup code
+                user.backup_codes = [code for code in user.backup_codes if not security.verify_password(form_data.password, code)]
+                session.add(user)
+                session.commit()
+            else:
+                user = None
+    
+    if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_access_token(
@@ -128,3 +141,34 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
     return HTMLResponse(
         content=email_data.html_content, headers={"subject:": email_data.subject}
     )
+
+
+
+@router.post("/reset-password-with-backup-code")
+def reset_password_with_backup_code(
+    email: str, 
+    backup_code: str, 
+    new_password: str, 
+    session: SessionDep
+) -> Message:
+    """
+    Verify backup code and reset password in one step
+    """
+    user = get_user_by_email_db(session=session, email=email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not security.verify_backup_code(backup_code, user.backup_codes):
+        raise HTTPException(status_code=400, detail="Invalid backup code")
+    
+    # Remove the used backup code
+    user.backup_codes = [code for code in user.backup_codes if not security.verify_password(backup_code, code)]
+    
+    # Set new password
+    hashed_password = get_password_hash(password=new_password)
+    user.hashed_password = hashed_password
+    
+    session.add(user)
+    session.commit()
+    
+    return Message(message="Password updated successfully")

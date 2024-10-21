@@ -1,8 +1,11 @@
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, List
 from jose import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
+import secrets
+
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
@@ -45,3 +48,17 @@ def preview_token(encrypted_token: str) -> str:
         return f"{decrypted_token[:3]}...{decrypted_token[-5:]}"
     except ValueError:
         return "Invalid token"
+
+
+
+def generate_backup_codes() -> List[str]:
+    """Generate a list of backup codes."""
+    return [secrets.token_hex(4).upper() for _ in range(10)]
+
+def hash_backup_codes(backup_codes: List[str]) -> List[str]:
+    """Hash a list of backup codes."""
+    return [get_password_hash(code) for code in backup_codes]
+
+def verify_backup_code(plain_code: str, hashed_codes: List[str]) -> bool:
+    """Verify a backup code against a list of hashed codes."""
+    return any(verify_password(plain_code, hashed_code) for hashed_code in hashed_codes)

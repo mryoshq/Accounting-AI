@@ -100,7 +100,7 @@ class Settings(BaseSettings):
         if value == "youness":
             message = (
                 f'The value of {var_name} is "youness", '
-                "for security, please change it, at least for deployments."
+                "for security, please change it"
             )
             if self.ENVIRONMENT == "local":
                 warnings.warn(message, stacklevel=1)

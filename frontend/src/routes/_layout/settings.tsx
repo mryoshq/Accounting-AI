@@ -1,3 +1,5 @@
+// src/routes/_layout/settings.tsx
+
 import {
   Container,
   Heading,
@@ -14,11 +16,13 @@ import type { UserPublic } from "../../client"
 import ChangePassword from "../../components/UserSettings/ChangePassword"
 import UserInformation from "../../components/UserSettings/UserInformation"
 import EnvironmentVariables from "../../components/UserSettings/EnvironmentVariables"
+import BackupCodes from "../../components/UserSettings/BackupCodes"
 
 const tabsConfig = [
   { title: "My profile", component: UserInformation },
   { title: "Password", component: ChangePassword },
-  {title: "API Tokens", component: EnvironmentVariables},
+  { title: "API Tokens", component: EnvironmentVariables },
+  { title: "Backup Codes", component: BackupCodes },
 ]
 
 export const Route = createFileRoute("/_layout/settings")({
@@ -29,8 +33,8 @@ function UserSettings() {
   const queryClient = useQueryClient()
   const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
   const finalTabs = currentUser?.is_superuser
-    ? tabsConfig.slice(0, 3)
-    : tabsConfig
+    ? tabsConfig
+    : tabsConfig.slice(0, 3)
 
   return (
     <Container maxW="full">

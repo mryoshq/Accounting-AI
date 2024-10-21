@@ -1,4 +1,5 @@
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import JSON, Column
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -12,21 +13,21 @@ import base64
 
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
-    is_active: bool = True
-    is_superuser: bool = False
-    full_name: Optional[str] = None
-    api_token_enabled: bool = False
-    profile_picture: Optional[str] = None  # This will store the base64 encoded image
+    is_active: bool = Field(default=True)
+    is_superuser: bool = Field(default=False)
+    full_name: Optional[str] = Field(default=None)
+    api_token_enabled: bool = Field(default=False)
+    profile_picture: Optional[str] = Field(default=None)
 
-    @validator('profile_picture')
-    def validate_profile_picture(cls, v):
-        if v is not None:
-            try:
-                base64.b64decode(v)
-            except:
-                raise ValueError('Invalid base64 string')
-        return v
-
+class User(UserBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    hashed_password: str = Field(...)
+    backup_codes: Optional[List[str]] = Field(sa_column=Column(JSON), default=None)
+    api_token: Optional[str] = Field(default=None, index=True)
+    api_token_created_at: Optional[datetime] = Field(default=None)
+    tasks: List["Task"] = Relationship(back_populates="user")
+    
+    
 class UserCreate(UserBase):
     password: str
 
@@ -51,12 +52,6 @@ class UpdatePassword(SQLModel):
     current_password: str
     new_password: str
 
-class User(UserBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    hashed_password: str
-    tasks: List["Task"] = Relationship(back_populates="user")
-    api_token: Optional[str] = Field(default=None, index=True)
-    api_token_created_at: Optional[datetime] = Field(default=None)
 
 class UserPublic(UserBase):
     id: int
@@ -64,6 +59,11 @@ class UserPublic(UserBase):
 class UsersPublic(SQLModel):
     data: List[UserPublic]
     count: int
+
+
+
+
+
 
 
 

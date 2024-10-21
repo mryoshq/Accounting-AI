@@ -11,14 +11,14 @@ import {
 import { useMutation } from "@tanstack/react-query"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
-
-import { type ApiError, LoginService, type NewPassword } from "../client"
+import { type ApiError, LoginService } from "../client"
 import { isLoggedIn } from "../hooks/useAuth"
 import useCustomToast from "../hooks/useCustomToast"
-import { confirmPasswordRules, passwordRules } from "../utils"
+import { passwordRules } from "../utils"
 
-interface NewPasswordForm extends NewPassword {
-  confirm_password: string
+interface ResetPasswordForm {
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export const Route = createFileRoute("/reset-password")({
@@ -37,31 +37,18 @@ function ResetPassword() {
     register,
     handleSubmit,
     getValues,
-    reset,
     formState: { errors },
-  } = useForm<NewPasswordForm>({
+  } = useForm<ResetPasswordForm>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: {
-      new_password: "",
-    },
   })
   const showToast = useCustomToast()
   const navigate = useNavigate()
 
-  const resetPassword = async (data: NewPassword) => {
-    const token = new URLSearchParams(window.location.search).get("token")
-    if (!token) return
-    await LoginService.resetPassword({
-      requestBody: { new_password: data.new_password, token: token },
-    })
-  }
-
   const mutation = useMutation({
-    mutationFn: resetPassword,
+    mutationFn: LoginService.resetPasswordWithBackupCode,
     onSuccess: () => {
       showToast("Success!", "Password updated.", "success")
-      reset()
       navigate({ to: "/login" })
     },
     onError: (err: ApiError) => {
@@ -70,8 +57,25 @@ function ResetPassword() {
     },
   })
 
-  const onSubmit: SubmitHandler<NewPasswordForm> = async (data) => {
-    mutation.mutate(data)
+  const onSubmit: SubmitHandler<ResetPasswordForm> = async (data) => {
+    const email = localStorage.getItem('recoveryEmail');
+    const backupCode = localStorage.getItem('backupCode');
+
+    if (!email || !backupCode) {
+      showToast("Error", "Recovery information not found. Please start the process again.", "error")
+      navigate({ to: "/recover-password" })
+      return;
+    }
+
+    mutation.mutate({ 
+      email, 
+      backupCode, 
+      newPassword: data.newPassword 
+    })
+
+    // Clear stored recovery info
+    localStorage.removeItem('recoveryEmail');
+    localStorage.removeItem('backupCode');
   }
 
   return (
@@ -89,35 +93,37 @@ function ResetPassword() {
         Reset Password
       </Heading>
       <Text textAlign="center">
-        Please enter your new password and confirm it to reset your password.
+        Please enter your new password.
       </Text>
-      <FormControl mt={4} isInvalid={!!errors.new_password}>
-        <FormLabel htmlFor="password">Set Password</FormLabel>
+      <FormControl isInvalid={!!errors.newPassword}>
+        <FormLabel htmlFor="newPassword">New Password</FormLabel>
         <Input
-          id="password"
-          {...register("new_password", passwordRules())}
-          placeholder="Password"
+          id="newPassword"
+          {...register("newPassword", passwordRules())}
           type="password"
         />
-        {errors.new_password && (
-          <FormErrorMessage>{errors.new_password.message}</FormErrorMessage>
+        {errors.newPassword && (
+          <FormErrorMessage>{errors.newPassword.message}</FormErrorMessage>
         )}
       </FormControl>
-      <FormControl mt={4} isInvalid={!!errors.confirm_password}>
-        <FormLabel htmlFor="confirm_password">Confirm Password</FormLabel>
+      <FormControl isInvalid={!!errors.confirmPassword}>
+        <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
         <Input
-          id="confirm_password"
-          {...register("confirm_password", confirmPasswordRules(getValues))}
-          placeholder="Password"
+          id="confirmPassword"
+          {...register("confirmPassword", {
+            validate: (value) => value === getValues("newPassword") || "Passwords do not match"
+          })}
           type="password"
         />
-        {errors.confirm_password && (
-          <FormErrorMessage>{errors.confirm_password.message}</FormErrorMessage>
+        {errors.confirmPassword && (
+          <FormErrorMessage>{errors.confirmPassword.message}</FormErrorMessage>
         )}
       </FormControl>
-      <Button variant="primary" type="submit">
+      <Button variant="primary" type="submit" isLoading={mutation.isPending}>
         Reset Password
       </Button>
     </Container>
   )
 }
+
+export default ResetPassword;

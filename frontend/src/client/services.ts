@@ -20,6 +20,12 @@ export type TDataRecoverPasswordHtmlContent = {
                 email: string
                 
             }
+export type TDataResetPasswordWithBackupCode = {
+                backupCode: string
+email: string
+newPassword: string
+                
+            }
 
 export class LoginService {
 
@@ -115,6 +121,30 @@ email,
 			url: '/api/v1/password-recovery-html-content/{email}',
 			path: {
 				email
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Reset Password With Backup Code
+	 * Verify backup code and reset password in one step
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static resetPasswordWithBackupCode(data: TDataResetPasswordWithBackupCode): CancelablePromise<Message> {
+		const {
+backupCode,
+email,
+newPassword,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/reset-password-with-backup-code',
+			query: {
+				email, backup_code: backupCode, new_password: newPassword
 			},
 			errors: {
 				422: `Validation Error`,
@@ -479,6 +509,45 @@ formData,
 		});
 	}
 
+	/**
+	 * Generate Backup Codes
+	 * Generate new backup codes for the current user.
+	 * @returns string Successful Response
+	 * @throws ApiError
+	 */
+	public static generateBackupCodes(): CancelablePromise<Array<string>> {
+				return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/users/me/generate-backup-codes',
+		});
+	}
+
+	/**
+	 * Has Backup Codes
+	 * Check if the current user has backup codes.
+	 * @returns boolean Successful Response
+	 * @throws ApiError
+	 */
+	public static hasBackupCodes(): CancelablePromise<boolean> {
+				return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/users/me/has-backup-codes',
+		});
+	}
+
+	/**
+	 * Invalidate Backup Codes
+	 * Invalidate all backup codes for the current user.
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static invalidateBackupCodes(): CancelablePromise<Message> {
+				return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/users/me/invalidate-backup-codes',
+		});
+	}
+
 }
 
 export type TDataTestEmail = {
@@ -815,7 +884,10 @@ export type TDataCreateSupplierContact = {
                 requestBody: SupplierContactCreate
                 
             }
-
+export type TDataReadContact = {
+                contactId: number
+                
+            }
 export type TDataUpdateSupplierContact = {
                 contactId: number
 requestBody: SupplierContactUpdate
