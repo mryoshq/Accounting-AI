@@ -15,16 +15,18 @@ import {
 } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { type ApiError, type TaskCreate, TasksService } from "../../client";
+import { type ApiError, type TaskCreate, TasksService, TaskStatus } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
 interface AddTaskProps {
   isOpen: boolean;
   onClose: () => void;
   onTaskCreated: (task: any) => void;
-  initialStatus?: string;
+  initialStatus?: TaskStatus;
   initialMonth: Date;
 }
+
+
 
 const AddTask = ({ isOpen, onClose, onTaskCreated, initialStatus, initialMonth }: AddTaskProps) => {
   const queryClient = useQueryClient();
@@ -47,7 +49,8 @@ const AddTask = ({ isOpen, onClose, onTaskCreated, initialStatus, initialMonth }
     defaultValues: {
       title: "",
       description: "",
-      status: initialStatus || "To Do",
+
+      status: initialStatus || 'To Do',
       due_date: getInitialDueDate(),
     },
   });

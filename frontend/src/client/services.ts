@@ -884,10 +884,7 @@ export type TDataCreateSupplierContact = {
                 requestBody: SupplierContactCreate
                 
             }
-export type TDataReadContact = {
-                contactId: number
-                
-            }
+
 export type TDataUpdateSupplierContact = {
                 contactId: number
 requestBody: SupplierContactUpdate
