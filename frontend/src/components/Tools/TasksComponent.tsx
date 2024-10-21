@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, EditIcon, DeleteIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TasksService, TaskPublic, TasksPublic } from '../../client';
+import { TasksService, TaskPublic, TasksPublic, TaskStatus } from '../../client';
 import useCustomToast from "../../hooks/useCustomToast";
 import AddTask from '../Tasks/AddTask';
 import EditTask from '../Tasks/EditTask';
@@ -144,7 +144,7 @@ const TasksComponent: React.FC = () => {
   const showToast = useCustomToast();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskPublic | null>(null);
-  const [addingTaskStatus, setAddingTaskStatus] = useState<string | undefined>(undefined);
+  const [addingTaskStatus, setAddingTaskStatus] = useState<TaskStatus | undefined>(undefined);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const { data: tasksData, isLoading, error } = useQuery<TasksPublic>({
@@ -186,7 +186,7 @@ const TasksComponent: React.FC = () => {
     setEditingTask(task);
   };
 
-  const handleAddTask = (status: string) => {
+  const handleAddTask = (status: TaskStatus) => {
     setAddingTaskStatus(status);
     setIsAddTaskOpen(true);
   };
@@ -253,7 +253,7 @@ const TasksComponent: React.FC = () => {
               <Text fontWeight="bold" textAlign="center">Date</Text>
             </Flex>
           </GridItem>
-          {['To Do', 'In Progress', 'Done'].map((status) => (
+          {(['To Do', 'In Progress', 'Done'] as TaskStatus[]).map((status) => (
             <GridItem key={status}>
               <Box 
                 bg={headerBgColor} 
@@ -304,21 +304,21 @@ const TasksComponent: React.FC = () => {
       </Box>
 
       {isAddTaskOpen && (
-        <AddTask
-          isOpen={isAddTaskOpen}
-          onClose={() => {
-            setIsAddTaskOpen(false);
-            setAddingTaskStatus(undefined);
-          }}
-          onTaskCreated={() => {
-            queryClient.invalidateQueries({ queryKey: ['tasks'] });
-            setIsAddTaskOpen(false);
-            setAddingTaskStatus(undefined);
-          }}
-          initialStatus={addingTaskStatus || 'To Do'}
-          initialMonth={currentMonth}
-        />
-      )}
+  <AddTask
+    isOpen={isAddTaskOpen}
+    onClose={() => {
+      setIsAddTaskOpen(false);
+      setAddingTaskStatus(undefined);
+    }}
+    onTaskCreated={() => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setIsAddTaskOpen(false);
+      setAddingTaskStatus(undefined);
+    }}
+    initialStatus={addingTaskStatus}
+    initialMonth={currentMonth}
+  />
+)}
 
       {editingTask && (
         <EditTask
