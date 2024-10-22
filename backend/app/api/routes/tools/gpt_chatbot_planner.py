@@ -13,45 +13,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ChatbotManager:
-    def __init__(self, user_id: int):
+    def __init__(self, user_id: int, access_token: str):
         self.agent = None
         self.api_key: str = load_env(user_id)
         self.chat_history: List[Dict[str, Any]] = []
         self.base_url: str = "http://localhost"  # Update this with your actual base URL
         self.allow_dangerous_requests: bool = True  # Set this to True to allow dangerous requests
-        self.access_token: Optional[str] = None
-        logger.info("ChatbotManager initialized")
-
-    def get_access_token(self) -> str:
-        """Get an access token for authentication."""
-        login_url = f"{self.base_url}/api/v1/login/access-token"
-        data = {
-            "username": "admin@example.com",  # Replace with actual username
-            "password": "password"  # Replace with actual password
-        }
-        try:
-            response = requests.post(login_url, data=data)
-            response.raise_for_status()
-            self.access_token = response.json()["access_token"]
-            logger.info("Access token retrieved successfully")
-            print(self.access_token)
-            return self.access_token
-        except requests.RequestException as e:
-            logger.error(f"Failed to get access token: {e}")
-            raise
+        self.access_token: str = access_token 
+        logger.info(f"ChatbotManager initialized for user {user_id}")
 
     def validate_token(self) -> bool:
         """Validate the current access token."""
-        if not self.access_token:
-            self.get_access_token()
         test_url = f"{self.base_url}/api/v1/paymentsfromcustomer/?skip=0&limit=1"
         headers = {"Authorization": f"Bearer {self.access_token}"}
         try:
             response = requests.get(test_url, headers=headers)
-            if response.status_code == 401:  # Unauthorized
-                self.get_access_token()  # Refresh token if unauthorized
-                return False
-            return True
+            return response.status_code != 401
         except requests.RequestException as e:
             logger.error(f"Failed to validate token: {e}")
             raise
@@ -165,12 +142,13 @@ class ChatbotManager:
 
 chatbot_manager = None
 
-def get_chatbot_manager(user_id: int) -> ChatbotManager:
+
+def get_chatbot_manager(user_id: int, access_token: str) -> ChatbotManager:
     global chatbot_manager
     if chatbot_manager is None or chatbot_manager.user_id != user_id:
-        chatbot_manager = ChatbotManager(user_id)
+        chatbot_manager = ChatbotManager(user_id, access_token)
     return chatbot_manager
 
-def process_query(query: str, user_id: int) -> str:
-    manager = get_chatbot_manager(user_id)
+def process_query(query: str, user_id: int, access_token: str) -> str:
+    manager = get_chatbot_manager(user_id, access_token)
     return manager.process_query(query)

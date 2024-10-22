@@ -35,25 +35,24 @@ def get_user_api_key(user_id: int) -> str:
         return result
 
 def load_env(user_id: int) -> str:
-    logger.debug(f"Loading environment for user {user_id}")
+    """Load OpenAI API key from user's stored token."""
     try:
-        encrypted_api_key = get_user_api_key(user_id)
-        if not encrypted_api_key:
-            logger.error(f"Encrypted API key not found for user {user_id}")
-            raise ValueError("API key not found for the user")
-        
-        logger.debug(f"Attempting to decrypt API key for user {user_id}")
-        decrypted_api_key = decrypt_token(encrypted_api_key)
-        if not decrypted_api_key:
-            logger.error(f"Failed to decrypt API key for user {user_id}")
-            raise ValueError("Failed to decrypt API key")
-        
-        logger.info(f"API key successfully decrypted for user {user_id}")
-        logger.info(f"loadenv _ API key: {decrypted_api_key}")
-        return decrypted_api_key
+        with Session(engine) as session:
+            user = session.get(User, user_id)
+            if not user or not user.api_token or not user.api_token_enabled:
+                raise ValueError("No active API token found for user")
+            
+            try:
+                decrypted_token = decrypt_token(user.api_token)
+                if not decrypted_token:
+                    raise ValueError("Failed to decrypt API token")
+                return decrypted_token
+            except Exception as e:
+                logger.error(f"Error decrypting token: {str(e)}")
+                raise ValueError("Invalid API token")
     except Exception as e:
-        logger.error(f"Error in load_env for user {user_id}: {str(e)}", exc_info=True)
-        raise
+        logger.error(f"Error loading API key: {str(e)}")
+        raise ValueError(f"Failed to load API key: {str(e)}")
 
 
 # PDF processing

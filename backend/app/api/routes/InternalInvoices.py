@@ -99,17 +99,32 @@ def read_payments_for_internal_invoice(
     payments = internal_invoices_crud.get_internal_invoice_payments_db(session, internal_invoice_id)
     return PaymentFromCustomersPublic(data=payments, count=len(payments))
 
+
 @router.post("/process_invoice", response_model=InvoiceProcessingResponse)
 def process_internal_invoices(
     session: SessionDep, 
-    current_user: CurrentUser, 
+    current_user: CurrentUser,
     files: List[UploadFile] = File(...)
 ) -> InvoiceProcessingResponse:
     """
     Process internal invoices and extract relevant information.
     """
     try:
-        results = gpt_process.pipeline(files, debug=True)
+        # Check if user has an active API token
+        if not current_user.api_token_enabled:
+            raise HTTPException(
+                status_code=403, 
+                detail="User does not have an active API token"
+            )
+            
+        results = gpt_process.pipeline(files, current_user.id, debug=True)
         return InvoiceProcessingResponse(data=results)
+    except ValueError as e:
+        # Handle specific errors like missing or invalid API key
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error processing invoice: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing invoice: {str(e)}"
+        )

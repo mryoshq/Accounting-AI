@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic.networks import EmailStr
 from pydantic import BaseModel
 
-from app.api.deps import get_current_active_superuser, get_current_user
+from app.api.deps import get_current_active_superuser, get_current_user, TokenDep
 from app.models import Message, User
 from app.utils import generate_test_email, send_email
 from app.api.routes.tools.gpt_chatbot_planner import process_query as process_query_planner
@@ -32,15 +32,25 @@ def test_email(email_to: EmailStr) -> Message:
     return Message(message="Test email sent")
 
 @router.post("/chatbot_planner")
-def chatbot_planner(query: ChatbotQuery, current_user: User = Depends(get_current_user)):
+def chatbot_planner(
+    token: TokenDep,
+    query: ChatbotQuery, 
+    current_user: User = Depends(get_current_user),
+    
+):
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Only superusers can use the chatbot planner")
-    response = process_query_planner(query.query, current_user.id)
+    response = process_query_planner(query.query, current_user.id, token)
     return {"response": response}
 
 @router.post("/chatbot_chat")
-def chatbot_chat(query: ChatbotQuery, current_user: User = Depends(get_current_active_superuser)):
+def chatbot_chat(
+    token: TokenDep,
+    query: ChatbotQuery, 
+    current_user: User = Depends(get_current_active_superuser),
+    
+):
     if not current_user.api_token_enabled:
         raise HTTPException(status_code=403, detail="User does not have an active API token")
-    response = process_query_chat(query.query, current_user.id)
+    response = process_query_chat(query.query, current_user.id, token)
     return {"response": response}
