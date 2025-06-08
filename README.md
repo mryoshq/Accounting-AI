@@ -83,13 +83,6 @@ docker compose up -d
 - Frontend: http://localhost
 - API documentation: http://localhost/docs
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-
-## Acknowledgments
-
-- [React - fastApi template](https://github.com/tiangolo/full-stack-fastapi-postgresql)
 
 ## Contributing
 
